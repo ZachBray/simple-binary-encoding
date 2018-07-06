@@ -651,6 +651,16 @@ task generateCSharpCodecs(type: JavaExec) {
             'sbe-benchmarks/src/main/resources/fix-message-samples.xml']
 }
 
+task generateTypeScriptCodecs(type: JavaExec) {
+    main = 'uk.co.real_logic.sbe.SbeTool'
+    classpath = project(':sbe-all').sourceSets.main.runtimeClasspath
+    systemProperties(
+            'sbe.output.dir': 'typescript/src/ts/generated',
+            'sbe.target.language': 'TypeScript',
+            'sbe.validation.xsd': validationXsdPath)
+    args = ['sbe-samples/src/main/resources/example-schema.xml']
+}
+
 task generateJavaIrCodecs(type: JavaExec) {
     main = 'uk.co.real_logic.sbe.SbeTool'
     classpath = project(':sbe-all').sourceSets.main.runtimeClasspath

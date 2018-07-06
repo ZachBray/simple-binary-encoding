@@ -1,6 +1,9 @@
 # editors
 *~
 *.swp
+*.iml
+*.ipr
+*.iws
 .idea
 .project
 .classpath
@@ -111,6 +114,11 @@ rust/car_example/car_example_data.sbe
 rust/car_example/Cargo.lock
 rust/car_example/src/car_example_generated_codec.rs
 rust/car_example/target
+
+# typescript
+typescript/node_modules
+typescript/src/ts/generated
+typescript/target
 
 # Mac
 .DS_Store

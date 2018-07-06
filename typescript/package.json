@@ -1,0 +1,29 @@
+{
+  "name": "sbe-typescript-tests",
+  "version": "0.0.1-alpha",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tslint --project .",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.1.4",
+    "@types/node": "^10.5.2",
+    "jest": "^23.3.0",
+    "text-encoding": "^0.6.4",
+    "ts-jest": "^23.0.0",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "/src/.*\\.spec\\.ts$"
+  }
+}
