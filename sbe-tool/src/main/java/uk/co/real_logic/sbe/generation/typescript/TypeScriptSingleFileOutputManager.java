@@ -14,12 +14,14 @@ import java.util.Set;
 import org.agrona.Verify;
 import org.agrona.generation.OutputManager;
 
-public class TypeScriptSingleFileOutputManager implements OutputManager {
+public class TypeScriptSingleFileOutputManager implements OutputManager
+{
     private final Set<String> writtenRegions = new HashSet<>();
     private final File outputFile;
     private boolean hasWrittenRegion;
 
-    public TypeScriptSingleFileOutputManager(final String outputFilePath) {
+    public TypeScriptSingleFileOutputManager(final String outputFilePath)
+    {
         Verify.notNull(outputFilePath, "outputFilePath");
 
         outputFile = new File(outputFilePath);
@@ -30,22 +32,26 @@ public class TypeScriptSingleFileOutputManager implements OutputManager {
             throw new IllegalStateException("Unable to create directory: " + outputDir);
         }
 
-        if (outputFile.exists() && !outputFile.delete()) {
+        if (outputFile.exists() && !outputFile.delete())
+        {
             throw new IllegalStateException("Unable to delete existing file: " + outputFile);
         }
     }
 
     @Override
-    public Writer createOutput(String s) throws IOException {
+    public Writer createOutput(final String s) throws IOException
+    {
         final boolean hasAlreadyWrittenRegion = !writtenRegions.add(s);
-        if (hasAlreadyWrittenRegion) {
+        if (hasAlreadyWrittenRegion)
+        {
             // We drop regions that have already been written.
             // TODO why are they written multiple times?
             return new StringWriter();
         }
 
         final BufferedWriter writer = createAppender();
-        if (hasWrittenRegion) {
+        if (hasWrittenRegion)
+        {
             writer.write("//#endregion");
             writer.newLine();
             writer.newLine();
@@ -57,18 +63,21 @@ public class TypeScriptSingleFileOutputManager implements OutputManager {
         return writer;
     }
 
-    public void writeFileEnding() throws IOException {
-        try (final BufferedWriter writer = createAppender()) {
+    public void writeFileEnding() throws IOException
+    {
+        try (BufferedWriter writer = createAppender())
+        {
             writer.write("//#endregion");
             writer.newLine();
             writer.close();
         }
     }
 
-    private BufferedWriter createAppender() throws IOException {
-        StandardOpenOption option = outputFile.exists()
-                ? StandardOpenOption.APPEND
-                : StandardOpenOption.CREATE_NEW;
+    private BufferedWriter createAppender() throws IOException
+    {
+        final StandardOpenOption option = outputFile.exists() ?
+            StandardOpenOption.APPEND :
+            StandardOpenOption.CREATE_NEW;
         return Files.newBufferedWriter(
                 outputFile.toPath(), StandardCharsets.UTF_8, option);
     }

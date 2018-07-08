@@ -53,12 +53,6 @@ import uk.co.real_logic.sbe.ir.Token;
 
 public class TypeScriptGenerator implements CodeGenerator
 {
-    enum CodecType
-    {
-        DECODER,
-        ENCODER
-    }
-
     private static final String META_ATTRIBUTE_ENUM = "MetaAttribute";
     private static final String BASE_INDENT = "";
     private static final String INDENT = "    ";
@@ -66,19 +60,17 @@ public class TypeScriptGenerator implements CodeGenerator
     private static final String GEN_COMPOSITE_ENCODER_FLYWEIGHT = "CompositeEncoderFlyweight";
     private static final String GEN_MESSAGE_DECODER_FLYWEIGHT = "MessageDecoderFlyweight";
     private static final String GEN_MESSAGE_ENCODER_FLYWEIGHT = "MessageEncoderFlyweight";
-
     private final Ir ir;
     private final OutputManager outputManager;
     private final String mutableBuffer;
     private final String readOnlyBuffer;
     private final boolean shouldGenerateInterfaces;
     private final boolean shouldDecodeUnknownEnumValues;
-
     public TypeScriptGenerator(
-            final Ir ir,
-            final boolean shouldGenerateInterfaces,
-            final boolean shouldDecodeUnknownEnumValues,
-            final OutputManager outputManager)
+        final Ir ir,
+        final boolean shouldGenerateInterfaces,
+        final boolean shouldDecodeUnknownEnumValues,
+        final OutputManager outputManager)
     {
         Verify.notNull(ir, "ir");
         Verify.notNull(outputManager, "outputManager");
@@ -92,6 +84,276 @@ public class TypeScriptGenerator implements CodeGenerator
 
         this.shouldGenerateInterfaces = shouldGenerateInterfaces;
         this.shouldDecodeUnknownEnumValues = shouldDecodeUnknownEnumValues;
+    }
+
+    private static CharSequence generateGroupDecoderProperty(
+        final String parentMessage,
+        final String groupName,
+        final Token token,
+        final String indent)
+    {
+        final StringBuilder sb = new StringBuilder();
+        final String className = formatClassName(groupName);
+        final String propertyName = formatPropertyName(token.name());
+
+        sb.append(String.format("\n" +
+            "%s" +
+            indent + "    private %sCodec?: %s;\n",
+            generateFlyweightPropertyJsdoc(indent + INDENT, token, className),
+            propertyName,
+            className));
+
+        sb.append(String.format("\n" +
+            indent + "    public static %sId(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(groupName),
+            token.id()));
+
+        sb.append(String.format("\n" +
+            indent + "    public static %sSinceVersion(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(groupName),
+            token.version()));
+
+        final String actingVersionGuard = token.version() == 0 ?
+            "" :
+            indent + "        if (this.parentMessage.actingVersion < " + token.version() + ") {\n" +
+            indent + "            this." + propertyName + ".count = 0;\n" +
+            indent + "            this." + propertyName + ".index = -1;\n" +
+            indent + "            return this." + propertyName + ";\n" +
+            indent + "        }\n\n";
+
+        sb.append(String.format("\n" +
+            indent + "    public %2$s(): %1$s {\n" +
+            "%3$s" +
+            indent + "        if (!this.%2$sCodec) {\n" +
+            indent + "            this.%2$sCodec = new %1$s(%4$s);\n" +
+            indent + "        }\n" +
+            indent + "        this.%2$sCodec.wrap(this.buffer);\n" +
+            indent + "        return this.%2$sCodec;\n" +
+            indent + "    }\n",
+            className,
+            propertyName,
+            actingVersionGuard,
+            parentMessage));
+
+        return sb;
+    }
+
+    private static CharSequence generateEnumFileHeader()
+    {
+        return "/* Generated SBE (Simple Binary Encoding) message codec */\n\n";
+    }
+
+    private static CharSequence generateDeclaration(
+        final String className, final String implementsString, final Token typeToken)
+    {
+        return String.format(
+            "%s" +
+            "export class %s%s {\n",
+            generateTypeJsdoc(BASE_INDENT, typeToken),
+            className,
+            implementsString);
+    }
+
+    private static CharSequence generateEnumDeclaration(final String name, final Token typeToken)
+    {
+        return
+            generateTypeJsdoc(BASE_INDENT, typeToken) +
+            "export enum " + name + " {\n";
+    }
+
+    private static CharSequence generateArrayFieldNotPresentCondition(final int sinceVersion, final String indent)
+    {
+        if (0 == sinceVersion)
+        {
+            return "";
+        }
+
+        return String.format(
+            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
+            indent + "            return 0;\n" +
+            indent + "        }\n\n",
+            sinceVersion);
+    }
+
+    private static CharSequence generateStringNotPresentCondition(final int sinceVersion, final String indent)
+    {
+        if (0 == sinceVersion)
+        {
+            return "";
+        }
+
+        return String.format(
+            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
+            indent + "            return \"\";\n" +
+            indent + "        }\n\n",
+            sinceVersion);
+    }
+
+    private static CharSequence generatePropertyNotPresentCondition(
+        final boolean inComposite,
+        final CodecType codecType,
+        final Token propertyToken,
+        final String enumName,
+        final String indent)
+    {
+        if (inComposite || codecType == ENCODER || 0 == propertyToken.version())
+        {
+            return "";
+        }
+
+        return String.format(
+            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
+            indent + "            return %s;\n" +
+            indent + "        }\n\n",
+            propertyToken.version(),
+            enumName == null ? "null" : (enumName + ".NULL_VAL"));
+    }
+
+    private static void generateArrayLengthMethod(
+        final String propertyName, final String indent, final int fieldLength, final StringBuilder sb)
+    {
+        sb.append(String.format("\n" +
+            indent + "    public static %sLength(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n\n",
+            propertyName,
+            fieldLength));
+    }
+
+    private static int sizeOfPrimitive(final Encoding encoding)
+    {
+        return encoding.primitiveType().size();
+    }
+
+    private static void generateCharacterEncodingMethod(
+        final StringBuilder sb, final String propertyName, final String characterEncoding, final String indent)
+    {
+        if (null != characterEncoding)
+        {
+            sb.append(String.format("\n" +
+                indent + "    public static %sCharacterEncoding(): string {\n" +
+                indent + "        return \"%s\";\n" +
+                indent + "    }\n",
+                formatPropertyName(propertyName),
+                characterEncoding));
+        }
+    }
+
+    private static CharSequence generateByteLiteralList(final byte[] bytes)
+    {
+        final StringBuilder values = new StringBuilder();
+        for (final byte b : bytes)
+        {
+            values.append(b).append(", ");
+        }
+
+        if (values.length() > 0)
+        {
+            values.setLength(values.length() - 2);
+        }
+
+        return values;
+    }
+
+    private static CharSequence generateFixedFlyweightCode(
+        final String className, final int size, final String bufferImplementation)
+    {
+        return String.format(
+            "    public readonly encodedLength = %2$d;\n" +
+            "    private buffer = new DataView(new ArrayBuffer(0));\n" +
+            "    private offset = 0;\n\n" +
+            "    public wrap(buffer: %3$s, offset: number): %1$s {\n" +
+            "        this.buffer = buffer;\n" +
+            "        this.offset = offset;\n\n" +
+            "        return this;\n" +
+            "    }\n\n" +
+            "    public getBuffer(): %3$s {\n" +
+            "        return this.buffer;\n" +
+            "    }\n\n" +
+            "    public getOffset(): number {\n" +
+            "        return this.offset;\n" +
+            "    }\n\n" +
+            "    public getEncodedLength(): number {\n" +
+            "        return this.encodedLength;\n" +
+            "    }\n",
+            className,
+            size,
+            bufferImplementation);
+    }
+
+    private static void generateFieldIdMethod(final StringBuilder sb, final Token token, final String indent)
+    {
+        sb.append(String.format(
+            "\n" +
+            indent + "    public static %sId(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(token.name()),
+            token.id()));
+    }
+
+    private static void generateEncodingOffsetMethod(
+        final StringBuilder sb, final String name, final int offset, final String indent)
+    {
+        sb.append(String.format(
+            "\n" +
+            indent + "    public static %sEncodingOffset(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(name),
+            offset));
+    }
+
+    private static void generateEncodingLengthMethod(
+        final StringBuilder sb, final String name, final int length, final String indent)
+    {
+        sb.append(String.format(
+            "\n" +
+            indent + "    public static %sEncodingLength(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(name),
+            length));
+    }
+
+    private static void generateFieldSinceVersionMethod(final StringBuilder sb, final Token token, final String indent)
+    {
+        sb.append(String.format(
+            "\n" +
+            indent + "    public static %sSinceVersion(): number {\n" +
+            indent + "        return %d;\n" +
+            indent + "    }\n",
+            formatPropertyName(token.name()),
+            token.version()));
+    }
+
+    private static void generateFieldMetaAttributeMethod(final StringBuilder sb, final Token token, final String indent)
+    {
+        final Encoding encoding = token.encoding();
+        final String epoch = encoding.epoch() == null ? "" : encoding.epoch();
+        final String timeUnit = encoding.timeUnit() == null ? "" : encoding.timeUnit();
+        final String semanticType = encoding.semanticType() == null ? "" : encoding.semanticType();
+
+        sb.append(String.format(
+            "\n" +
+            indent + "    public static %sMetaAttribute(metaAttribute: MetaAttribute): string {\n" +
+            indent + "        switch (metaAttribute) {\n" +
+            indent + "            case MetaAttribute.EPOCH: return \"%s\";\n" +
+            indent + "            case MetaAttribute.TIME_UNIT: return \"%s\";\n" +
+            indent + "            case MetaAttribute.SEMANTIC_TYPE: return \"%s\";\n" +
+            indent + "            case MetaAttribute.PRESENCE: return \"%s\";\n" +
+            indent + "        }\n\n" +
+            indent + "        return \"\";\n" +
+            indent + "    }\n",
+            formatPropertyName(token.name()),
+            epoch,
+            timeUnit,
+            semanticType,
+            encoding.presence().toString().toLowerCase()));
     }
 
     private String encoderName(final String className)
@@ -169,8 +431,9 @@ public class TypeScriptGenerator implements CodeGenerator
         }
 
         // TODO this is dirty
-        if (outputManager instanceof TypeScriptSingleFileOutputManager) {
-            ((TypeScriptSingleFileOutputManager) outputManager).writeFileEnding();
+        if (outputManager instanceof TypeScriptSingleFileOutputManager)
+        {
+            ((TypeScriptSingleFileOutputManager)outputManager).writeFileEnding();
         }
     }
 
@@ -241,7 +504,8 @@ public class TypeScriptGenerator implements CodeGenerator
         final String outerClassName,
         final String parentMessage,
         final List<Token> tokens,
-        final String indent) throws IOException {
+        final String indent) throws IOException
+    {
         for (int i = 0, size = tokens.size(); i < size; i++)
         {
             final Token groupToken = tokens.get(i);
@@ -263,7 +527,7 @@ public class TypeScriptGenerator implements CodeGenerator
             i = collectVarData(tokens, i, varData);
 
             generateGroupDecoderClass(outerClassName, groupToken, dimensionsToken,
-                    groupName, fields, groups, varData);
+                groupName, fields, groups, varData);
 
             sb.append(generateGroupDecoderProperty(parentMessage, groupName, groupToken, indent));
         }
@@ -271,17 +535,18 @@ public class TypeScriptGenerator implements CodeGenerator
 
     // TODO this will suffer from group name collisions across messages
     private void generateGroupDecoderClass(
-            final String outerClassName,
-            final Token groupToken,
-            final Token dimensionsToken,
-            final String groupName,
-            final List<Token> fields,
-            final List<Token> groups,
-            final List<Token> varData) throws IOException {
+        final String outerClassName,
+        final Token groupToken,
+        final Token dimensionsToken,
+        final String groupName,
+        final List<Token> fields,
+        final List<Token> groups,
+        final List<Token> varData) throws IOException
+    {
 
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
-        generateGroupDecoderClassHeader(sb, groupName, outerClassName, groupToken, dimensionsToken, "" );
+        generateGroupDecoderClassHeader(sb, groupName, outerClassName, groupToken, dimensionsToken, "");
         sb.append(generateDecoderFields(fields,  ""));
         generateDecoderGroups(sb, outerClassName, "this.parentMessage", groups, "");
         sb.append(generateDecoderVarData(varData, ""));
@@ -289,7 +554,8 @@ public class TypeScriptGenerator implements CodeGenerator
         // appendGroupInstanceDecoderDisplay(sb, fields, groups, varData, indent + INDENT);
         sb.append("}\n\n");
 
-        try (Writer groupWriter = outputManager.createOutput(groupName)) {
+        try (Writer groupWriter = outputManager.createOutput(groupName))
+        {
             groupWriter.write(sb.toString());
         }
     }
@@ -299,7 +565,8 @@ public class TypeScriptGenerator implements CodeGenerator
         final String outerClassName,
         final String parentMessage,
         final List<Token> tokens,
-        final String indent) throws IOException {
+        final String indent) throws IOException
+    {
         for (int i = 0, size = tokens.size(); i < size; i++)
         {
             final Token groupToken = tokens.get(i);
@@ -322,21 +589,23 @@ public class TypeScriptGenerator implements CodeGenerator
             final List<Token> varData = new ArrayList<>();
             i = collectVarData(tokens, i, varData);
 
-            generateGroupEncoderClass(outerClassName, tokens, groupName, groupClassName, groupTokenIndex, fields, groups, varData);
+            generateGroupEncoderClass(outerClassName, tokens, groupName, groupClassName,
+                groupTokenIndex, fields, groups, varData);
 
             sb.append(generateGroupEncoderProperty(parentMessage, groupName, groupToken, indent));
         }
     }
 
     private void generateGroupEncoderClass(
-            final String outerClassName,
-            final List<Token> tokens,
-            final String groupName,
-            final String groupClassName,
-            final int groupTokenIndex,
-            final List<Token> fields,
-            final List<Token> groups,
-            final List<Token> varData) throws IOException {
+        final String outerClassName,
+        final List<Token> tokens,
+        final String groupName,
+        final String groupClassName,
+        final int groupTokenIndex,
+        final List<Token> fields,
+        final List<Token> groups,
+        final List<Token> varData) throws IOException
+    {
 
         final StringBuilder sb = new StringBuilder();
 
@@ -346,7 +615,8 @@ public class TypeScriptGenerator implements CodeGenerator
         sb.append(generateEncoderVarData(groupClassName, varData, ""));
         sb.append("}\n");
 
-        try (final Writer writer = outputManager.createOutput(groupClassName)) {
+        try (Writer writer = outputManager.createOutput(groupClassName))
+        {
             writer.write(sb.toString());
         }
     }
@@ -426,9 +696,9 @@ public class TypeScriptGenerator implements CodeGenerator
         final int blockLength = tokens.get(index).encodedLength();
 
         sb.append(String.format(
-                ind + "    public readonly sbeHeaderSize: number = this.headerSize;\n" +
-                ind + "    public readonly sbeBlockLength: number = %d;\n\n",
-                blockLength));
+            ind + "    public readonly sbeHeaderSize: number = this.headerSize;\n" +
+            ind + "    public readonly sbeBlockLength: number = %d;\n\n",
+            blockLength));
 
         final Token numInGroupToken = tokens.get(index + 3);
 
@@ -525,67 +795,11 @@ public class TypeScriptGenerator implements CodeGenerator
             parentMessageClassName));
     }
 
-    private static CharSequence generateGroupDecoderProperty(
-            final String parentMessage,
-            final String groupName,
-            final Token token,
-            final String indent)
-    {
-        final StringBuilder sb = new StringBuilder();
-        final String className = formatClassName(groupName);
-        final String propertyName = formatPropertyName(token.name());
-
-        sb.append(String.format("\n" +
-            "%s" +
-            indent + "    private %sCodec?: %s;\n",
-            generateFlyweightPropertyJsdoc(indent + INDENT, token, className),
-            propertyName,
-            className));
-
-        sb.append(String.format("\n" +
-            indent + "    public static %sId(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(groupName),
-            token.id()));
-
-        sb.append(String.format("\n" +
-            indent + "    public static %sSinceVersion(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(groupName),
-            token.version()));
-
-        final String actingVersionGuard = token.version() == 0 ?
-            "" :
-            indent + "        if (this.parentMessage.actingVersion < " + token.version() + ") {\n" +
-            indent + "            this." + propertyName + ".count = 0;\n" +
-            indent + "            this." + propertyName + ".index = -1;\n" +
-            indent + "            return this." + propertyName + ";\n" +
-            indent + "        }\n\n";
-
-        sb.append(String.format("\n" +
-            indent + "    public %2$s(): %1$s {\n" +
-            "%3$s" +
-            indent + "        if (!this.%2$sCodec) {\n" +
-            indent + "            this.%2$sCodec = new %1$s(%4$s);\n" +
-            indent + "        }\n" +
-            indent + "        this.%2$sCodec.wrap(this.buffer);\n" +
-            indent + "        return this.%2$sCodec;\n" +
-            indent + "    }\n",
-            className,
-            propertyName,
-            actingVersionGuard,
-            parentMessage));
-
-        return sb;
-    }
-
     private CharSequence generateGroupEncoderProperty(
-            final String parentMessage,
-            final String groupName,
-            final Token token,
-            final String indent)
+        final String parentMessage,
+        final String groupName,
+        final Token token,
+        final String indent)
     {
         final StringBuilder sb = new StringBuilder();
         final String className = formatClassName(encoderName(groupName));
@@ -715,6 +929,65 @@ public class TypeScriptGenerator implements CodeGenerator
 
         return sb;
     }
+
+    /* TODO
+    private CharSequence generateEnumBody(final Token token, final String enumName)
+    {
+        final String javaEncodingType = primitiveTypeName(token);
+
+        return String.format(
+            "    private value: %1$s;\n\n" +
+            "    %2$s(final %1$s value)\n" +
+            "    {\n" +
+            "        this.value = value;\n" +
+            "    }\n\n" +
+            "    public %1$s value()\n" +
+            "    {\n" +
+            "        return value;\n" +
+            "    }\n\n",
+            javaEncodingType,
+            enumName);
+    }
+
+    private CharSequence generateEnumLookupMethod(final List<Token> tokens, final String enumName)
+    {
+        final StringBuilder sb = new StringBuilder();
+
+        final PrimitiveType primitiveType = tokens.get(0).encoding().primitiveType();
+        sb.append(String.format(
+            "    public static %s get(final %s value)\n" +
+            "    {\n" +
+            "        switch (value)\n" +
+            "        {\n",
+            enumName,
+            typeScriptTypeName(primitiveType)));
+
+        for (final Token token : tokens)
+        {
+            sb.append(String.format(
+                "            case %s: return %s;\n",
+                token.encoding().constValue().toString(),
+                token.name()));
+        }
+
+        final String handleUnknownLogic = shouldDecodeUnknownEnumValues ?
+            INDENT + INDENT + "return SBE_UNKNOWN;\n" :
+            INDENT + INDENT + "throw new IllegalArgumentException(\"Unknown value: \" + value);\n";
+
+        sb.append(String.format(
+            "        }\n\n" +
+            "        if (%s == value)\n" +
+            "        {\n" +
+            "            return NULL_VAL;\n" +
+            "        }\n\n" +
+            "%s" +
+            "    }\n",
+            generateLiteral(primitiveType, tokens.get(0).encoding().applicableNullValue().toString()),
+            handleUnknownLogic));
+
+        return sb;
+    }
+    */
 
     private void generateDataDecodeMethods(
         final StringBuilder sb,
@@ -915,10 +1188,10 @@ public class TypeScriptGenerator implements CodeGenerator
     }
 
     private void generateFixedFlyweightHeader(
-            final Token token,
-            final String typeName,
-            final Writer out,
-            final String buffer) throws IOException
+        final Token token,
+        final String typeName,
+        final Writer out,
+        final String buffer) throws IOException
     {
         out.append(generateFileHeader());
         out.append(generateDeclaration(typeName, "", token));
@@ -926,11 +1199,11 @@ public class TypeScriptGenerator implements CodeGenerator
     }
 
     private void generateCompositeFlyweightHeader(
-            final Token token,
-            final String typeName,
-            final Writer out,
-            final String buffer,
-            final String implementsString) throws IOException
+        final Token token,
+        final String typeName,
+        final Writer out,
+        final String buffer,
+        final String implementsString) throws IOException
     {
         out.append(generateFileHeader());
         out.append(generateDeclaration(typeName, implementsString, token));
@@ -1008,7 +1281,6 @@ public class TypeScriptGenerator implements CodeGenerator
 
             // TODO
             // out.append(generateCompositeDecoderDisplay(tokens, BASE_INDENT));
-
             out.append("}\n");
         }
 
@@ -1187,65 +1459,6 @@ public class TypeScriptGenerator implements CodeGenerator
         return sb;
     }
 
-    /* TODO
-    private CharSequence generateEnumBody(final Token token, final String enumName)
-    {
-        final String javaEncodingType = primitiveTypeName(token);
-
-        return String.format(
-            "    private value: %1$s;\n\n" +
-            "    %2$s(final %1$s value)\n" +
-            "    {\n" +
-            "        this.value = value;\n" +
-            "    }\n\n" +
-            "    public %1$s value()\n" +
-            "    {\n" +
-            "        return value;\n" +
-            "    }\n\n",
-            javaEncodingType,
-            enumName);
-    }
-
-    private CharSequence generateEnumLookupMethod(final List<Token> tokens, final String enumName)
-    {
-        final StringBuilder sb = new StringBuilder();
-
-        final PrimitiveType primitiveType = tokens.get(0).encoding().primitiveType();
-        sb.append(String.format(
-            "    public static %s get(final %s value)\n" +
-            "    {\n" +
-            "        switch (value)\n" +
-            "        {\n",
-            enumName,
-            typeScriptTypeName(primitiveType)));
-
-        for (final Token token : tokens)
-        {
-            sb.append(String.format(
-                "            case %s: return %s;\n",
-                token.encoding().constValue().toString(),
-                token.name()));
-        }
-
-        final String handleUnknownLogic = shouldDecodeUnknownEnumValues ?
-            INDENT + INDENT + "return SBE_UNKNOWN;\n" :
-            INDENT + INDENT + "throw new IllegalArgumentException(\"Unknown value: \" + value);\n";
-
-        sb.append(String.format(
-            "        }\n\n" +
-            "        if (%s == value)\n" +
-            "        {\n" +
-            "            return NULL_VAL;\n" +
-            "        }\n\n" +
-            "%s" +
-            "    }\n",
-            generateLiteral(primitiveType, tokens.get(0).encoding().applicableNullValue().toString()),
-            handleUnknownLogic));
-
-        return sb;
-    }
-    */
-
     private CharSequence interfaceImportLine()
     {
         if (!shouldGenerateInterfaces)
@@ -1270,23 +1483,6 @@ public class TypeScriptGenerator implements CodeGenerator
         return generateFileHeader();
     }
 
-    private static CharSequence generateEnumFileHeader()
-    {
-        return "/* Generated SBE (Simple Binary Encoding) message codec */\n\n";
-    }
-
-
-    private static CharSequence generateDeclaration(
-        final String className, final String implementsString, final Token typeToken)
-    {
-        return String.format(
-            "%s" +
-            "export class %s%s {\n",
-            generateTypeJsdoc(BASE_INDENT, typeToken),
-            className,
-            implementsString);
-    }
-
     private void generateMetaAttributeEnum() throws IOException
     {
         try (Writer out = outputManager.createOutput(META_ATTRIBUTE_ENUM))
@@ -1300,13 +1496,6 @@ public class TypeScriptGenerator implements CodeGenerator
                 "    PRESENCE,\n" +
                 "}\n");
         }
-    }
-
-    private static CharSequence generateEnumDeclaration(final String name, final Token typeToken)
-    {
-        return
-            generateTypeJsdoc(BASE_INDENT, typeToken) +
-            "export enum " + name + " {\n";
     }
 
     private CharSequence generatePrimitiveDecoder(
@@ -1468,54 +1657,6 @@ public class TypeScriptGenerator implements CodeGenerator
             generateLiteral(encoding.primitiveType(), encoding.applicableNullValue().toString()));
     }
 
-    private static CharSequence generateArrayFieldNotPresentCondition(final int sinceVersion, final String indent)
-    {
-        if (0 == sinceVersion)
-        {
-            return "";
-        }
-
-        return String.format(
-            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
-            indent + "            return 0;\n" +
-            indent + "        }\n\n",
-            sinceVersion);
-    }
-
-    private static CharSequence generateStringNotPresentCondition(final int sinceVersion, final String indent)
-    {
-        if (0 == sinceVersion)
-        {
-            return "";
-        }
-
-        return String.format(
-            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
-            indent + "            return \"\";\n" +
-            indent + "        }\n\n",
-            sinceVersion);
-    }
-
-    private static CharSequence generatePropertyNotPresentCondition(
-        final boolean inComposite,
-        final CodecType codecType,
-        final Token propertyToken,
-        final String enumName,
-        final String indent)
-    {
-        if (inComposite || codecType == ENCODER || 0 == propertyToken.version())
-        {
-            return "";
-        }
-
-        return String.format(
-            indent + "        if (this.parentMessage.actingVersion < %d) {\n" +
-            indent + "            return %s;\n" +
-            indent + "        }\n\n",
-            propertyToken.version(),
-            enumName == null ? "null" : (enumName + ".NULL_VAL"));
-    }
-
     private CharSequence generatePrimitiveArrayPropertyDecode(
         final boolean inComposite,
         final String propertyName,
@@ -1593,22 +1734,9 @@ public class TypeScriptGenerator implements CodeGenerator
         return sb;
     }
 
-    private static void generateArrayLengthMethod(
-        final String propertyName, final String indent, final int fieldLength, final StringBuilder sb)
-    {
-        sb.append(String.format("\n" +
-            indent + "    public static %sLength(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n\n",
-            propertyName,
-            fieldLength));
-    }
-
     private String byteOrderString(final Encoding encoding)
     {
-        String isLittleEndian = encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN)
-                ? "true"
-                : "false";
+        final String isLittleEndian = encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN) ? "true" : "false";
         return sizeOfPrimitive(encoding) == 1 ? "" : ", " + isLittleEndian;
     }
 
@@ -1682,7 +1810,7 @@ public class TypeScriptGenerator implements CodeGenerator
         sb.append(String.format("\n" +
             indent + "    public %1$s(src: string): %2$s {\n" +
             indent + "        const length = %3$d;\n" +
-            indent + "        const encoder = new TextEncoder(); // Bug: should be \"%4$s\" not \"UTF-8\"\n" + // TODO non UTF-8 encoding
+            indent + "        const encoder = new TextEncoder(); // Bug: should be \"%4$s\" not \"UTF-8\"\n" + // TODO
             indent + "        const bytes = encoder.encode(src);\n" +
             indent + "        if (bytes.length > length) {\n" +
             indent + "            throw new Error(" +
@@ -1703,25 +1831,6 @@ public class TypeScriptGenerator implements CodeGenerator
             fieldLength,
             encoding.characterEncoding(),
             offset));
-    }
-
-    private static int sizeOfPrimitive(final Encoding encoding)
-    {
-        return encoding.primitiveType().size();
-    }
-
-    private static void generateCharacterEncodingMethod(
-        final StringBuilder sb, final String propertyName, final String characterEncoding, final String indent)
-    {
-        if (null != characterEncoding)
-        {
-            sb.append(String.format("\n" +
-                indent + "    public static %sCharacterEncoding(): string {\n" +
-                indent + "        return \"%s\";\n" +
-                indent + "    }\n",
-                formatPropertyName(propertyName),
-                characterEncoding));
-        }
     }
 
     private CharSequence generateConstPropertyMethods(
@@ -1781,48 +1890,6 @@ public class TypeScriptGenerator implements CodeGenerator
             encoding.constValue()));
 
         return sb;
-    }
-
-    private static CharSequence generateByteLiteralList(final byte[] bytes)
-    {
-        final StringBuilder values = new StringBuilder();
-        for (final byte b : bytes)
-        {
-            values.append(b).append(", ");
-        }
-
-        if (values.length() > 0)
-        {
-            values.setLength(values.length() - 2);
-        }
-
-        return values;
-    }
-
-    private static CharSequence generateFixedFlyweightCode(
-        final String className, final int size, final String bufferImplementation)
-    {
-        return String.format(
-            "    public readonly encodedLength = %2$d;\n" +
-            "    private buffer = new DataView(new ArrayBuffer(0));\n" +
-            "    private offset = 0;\n\n" +
-            "    public wrap(buffer: %3$s, offset: number): %1$s {\n" +
-            "        this.buffer = buffer;\n" +
-            "        this.offset = offset;\n\n" +
-            "        return this;\n" +
-            "    }\n\n" +
-            "    public getBuffer(): %3$s {\n" +
-            "        return this.buffer;\n" +
-            "    }\n\n" +
-            "    public getOffset(): number {\n" +
-            "        return this.offset;\n" +
-            "    }\n\n" +
-            "    public getEncodedLength(): number {\n" +
-            "        return this.encodedLength;\n" +
-            "    }\n",
-            className,
-            size,
-            bufferImplementation);
     }
 
     private CharSequence generateCompositeFlyweightCode(
@@ -2050,77 +2117,6 @@ public class TypeScriptGenerator implements CodeGenerator
         return sb;
     }
 
-    private static void generateFieldIdMethod(final StringBuilder sb, final Token token, final String indent)
-    {
-        sb.append(String.format(
-            "\n" +
-            indent + "    public static %sId(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(token.name()),
-            token.id()));
-    }
-
-    private static void generateEncodingOffsetMethod(
-        final StringBuilder sb, final String name, final int offset, final String indent)
-    {
-        sb.append(String.format(
-            "\n" +
-            indent + "    public static %sEncodingOffset(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(name),
-            offset));
-    }
-
-    private static void generateEncodingLengthMethod(
-        final StringBuilder sb, final String name, final int length, final String indent)
-    {
-        sb.append(String.format(
-            "\n" +
-            indent + "    public static %sEncodingLength(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(name),
-            length));
-    }
-
-    private static void generateFieldSinceVersionMethod(final StringBuilder sb, final Token token, final String indent)
-    {
-        sb.append(String.format(
-            "\n" +
-            indent + "    public static %sSinceVersion(): number {\n" +
-            indent + "        return %d;\n" +
-            indent + "    }\n",
-            formatPropertyName(token.name()),
-            token.version()));
-    }
-
-    private static void generateFieldMetaAttributeMethod(final StringBuilder sb, final Token token, final String indent)
-    {
-        final Encoding encoding = token.encoding();
-        final String epoch = encoding.epoch() == null ? "" : encoding.epoch();
-        final String timeUnit = encoding.timeUnit() == null ? "" : encoding.timeUnit();
-        final String semanticType = encoding.semanticType() == null ? "" : encoding.semanticType();
-
-        sb.append(String.format(
-            "\n" +
-            indent + "    public static %sMetaAttribute(metaAttribute: MetaAttribute): string {\n" +
-            indent + "        switch (metaAttribute) {\n" +
-            indent + "            case MetaAttribute.EPOCH: return \"%s\";\n" +
-            indent + "            case MetaAttribute.TIME_UNIT: return \"%s\";\n" +
-            indent + "            case MetaAttribute.SEMANTIC_TYPE: return \"%s\";\n" +
-            indent + "            case MetaAttribute.PRESENCE: return \"%s\";\n" +
-            indent + "        }\n\n" +
-            indent + "        return \"\";\n" +
-            indent + "    }\n",
-            formatPropertyName(token.name()),
-            epoch,
-            timeUnit,
-            semanticType,
-            encoding.presence().toString().toLowerCase()));
-    }
-
     private CharSequence generateEnumDecoder(
         final boolean inComposite,
         final Token fieldToken,
@@ -2251,11 +2247,11 @@ public class TypeScriptGenerator implements CodeGenerator
         return sb;
     }
 
-    private String generateGet(String indent, final String index, final Encoding encoding)
+    private String generateGet(final String outerIndent, final String index, final Encoding encoding)
     {
         final String byteOrder = byteOrderString(encoding);
         final PrimitiveType type = encoding.primitiveType();
-        indent += "            ";
+        final String indent = outerIndent + "            "; // TODO clean up
         switch (type)
         {
             case CHAR:
@@ -2282,7 +2278,8 @@ public class TypeScriptGenerator implements CodeGenerator
 
             case INT64:
                 // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
+                {
                     return "(this.buffer.getInt32(" + index + ", true) |\n" +
                             indent + "(this.buffer.getInt32(" + index + " + 4, true) << 32))";
                 }
@@ -2291,7 +2288,8 @@ public class TypeScriptGenerator implements CodeGenerator
 
             case UINT64:
                 // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
+                {
                     return "(this.buffer.getUint32(" + index + ", true) |\n" +
                             indent + "(this.buffer.getUint32(" + index + " + 4, true) << 32))";
                 }
@@ -2305,7 +2303,7 @@ public class TypeScriptGenerator implements CodeGenerator
         throw new IllegalArgumentException("primitive type not supported: " + type);
     }
 
-    private String generatePut(String indent, final String index, final String value, final Encoding encoding)
+    private String generatePut(final String indent, final String index, final String value, final Encoding encoding)
     {
         final String byteOrder = byteOrderString(encoding);
         final PrimitiveType type = encoding.primitiveType();
@@ -2335,7 +2333,8 @@ public class TypeScriptGenerator implements CodeGenerator
 
             case INT64:
                 // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
+                {
                     return "this.buffer.setInt32(" + index + " + 4, " + value + " & ((1 << 32) - 1), true);\n" +
                             indent + "this.buffer.setInt32(" + index + ", " + value + " >> 32, true)";
                 }
@@ -2344,7 +2343,8 @@ public class TypeScriptGenerator implements CodeGenerator
 
             case UINT64:
                 // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
+                {
                     return "this.buffer.setUint32(" + index + " + 4, " + value + " & ((1 << 32) - 1), true);\n" +
                             indent + "this.buffer.setUint32(" + index + ", " + value + " >> 32, true)";
                 }
@@ -2400,7 +2400,7 @@ public class TypeScriptGenerator implements CodeGenerator
 
     private String generateChoicePut(final PrimitiveType type, final String bitIdx, final String byteOrder)
     {
-        String accessor;
+        final String accessor;
 
         switch (type)
         {
@@ -2441,6 +2441,12 @@ public class TypeScriptGenerator implements CodeGenerator
         }
 
         throw new IllegalArgumentException("primitive type not supported: " + type);
+    }
+
+    enum CodecType
+    {
+        DECODER,
+        ENCODER
     }
 
     /* TODO

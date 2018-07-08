@@ -404,7 +404,8 @@ public class ValidationUtil
         "constructor", "declare", "get", "module", "require", "number", "set", "string", "symbol",
         "type", "from", "of"));
 
-    public static boolean isTypeScriptKeyword(final String token) {
+    public static boolean isTypeScriptKeyword(final String token)
+    {
         return TYPESCRIPT_KEYWORDS.contains(token);
     }
 }

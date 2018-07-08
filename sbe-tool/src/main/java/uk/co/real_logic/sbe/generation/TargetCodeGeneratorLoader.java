@@ -66,7 +66,7 @@ public enum TargetCodeGeneratorLoader implements TargetCodeGenerator
     {
         public CodeGenerator newInstance(final Ir ir, final String outputDir)
         {
-            String outputFile = Paths.get(outputDir, ir.applicableNamespace() + ".ts").toString();
+            final String outputFile = Paths.get(outputDir, ir.applicableNamespace() + ".ts").toString();
             return new TypeScriptGenerator(
                     ir,
                     false,
