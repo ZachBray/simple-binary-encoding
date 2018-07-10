@@ -28,7 +28,6 @@ defaultTasks 'clean', 'build', 'shadowJar', 'install'
 
 def sbeGroup = 'uk.co.real-logic'
 def sbeVersion = file('version.txt').text.trim()
-def staging = false
 
 group = sbeGroup
 version = sbeVersion
@@ -221,19 +220,19 @@ project(':sbe-tool') {
             mavenDeployer {
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                if (staging) {
-                    snapshotRepository(url: "https://mymavenrepo.com/repo/pzO5fGq8V3jMpeIBdZwA/") {
-                        authentication(userName: "myMavenRepo", password: "blah")
-                    }
-                } else {
-                    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                        authentication(userName: ossrhUsername, password: ossrhPassword)
-                    }
-
-                    snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                        authentication(userName: ossrhUsername, password: ossrhPassword)
-                    }
+                snapshotRepository(url: "https://mymavenrepo.com/repo/pzO5fGq8V3jMpeIBdZwA/") {
+                    authentication(userName: "myMavenRepo", password: "blah")
                 }
+
+                /*
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+                */
 
                 pom.project(projectPom)
             }
@@ -719,7 +718,6 @@ task uploadToMavenCentral {
 }
 
 task uploadToMavenStaging {
-    staging = true
     dependsOn 'sbe-tool:uploadArchives'
 }
 
