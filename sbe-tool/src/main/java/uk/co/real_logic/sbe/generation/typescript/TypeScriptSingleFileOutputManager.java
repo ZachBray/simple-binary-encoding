@@ -56,6 +56,11 @@ public class TypeScriptSingleFileOutputManager implements OutputManager
             writer.newLine();
             writer.newLine();
         }
+        else
+        {
+            writer.write("/* tslint:disable */");
+            writer.newLine();
+        }
         writer.write("//#region " + s);
         writer.newLine();
         writer.newLine();
