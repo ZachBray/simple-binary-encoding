@@ -1120,7 +1120,7 @@ public class TypeScriptGenerator implements CodeGenerator
             indent + "        const underlyingBuffer = this.buffer.buffer;\n" +
             indent + "        const dataOffset = this.buffer.byteOffset + limit + headerLength;\n" +
             indent + "        const view = new Uint8Array(underlyingBuffer, dataOffset, dataLength);\n" +
-            indent + "        dst.set(view);\n\n" +
+            indent + "        dst.set(view, dstOffset);\n\n" +
             indent + "        return bytesCopied;\n" +
             indent + "    }\n",
             propertyName,
@@ -1963,7 +1963,7 @@ public class TypeScriptGenerator implements CodeGenerator
             "    public readonly sbeSchemaVersion: %7$s = %8$s;\n" +
             "    public readonly sbeSemanticType = \"%10$s\";\n" +
             "    public readonly isLittleEndian = %14$s;\n\n" +
-            "    private readonly parentMessage: %9$s = this;\n" +
+            "    public readonly parentMessage: %9$s = this;\n" +
             "    private buffer = new DataView(new ArrayBuffer(0));\n\n" +
             "    protected offset = -1;\n" +
             "    protected limit = -1;\n" +
