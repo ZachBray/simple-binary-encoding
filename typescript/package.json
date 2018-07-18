@@ -5,25 +5,17 @@
   "scripts": {
     "lint": "tslint --project .",
     "build": "tsc",
-    "test": "jest"
+    "test": "mocha -r ts-node/register -r ./src/js/text-encoding-polyfill.js --timeout 5000 src/ts/**/*.spec.ts"
   },
   "devDependencies": {
-    "@types/jest": "^23.1.4",
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.4",
     "@types/node": "^10.5.2",
-    "jest": "^23.3.0",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
     "text-encoding": "^0.6.4",
-    "ts-jest": "^23.0.0",
+    "ts-node": "^7.0.0",
     "tslint": "^5.10.0",
     "typescript": "^2.9.2"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ],
-    "transform": {
-      "\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    },
-    "testRegex": "/src/.*\\.spec\\.ts$"
   }
 }
