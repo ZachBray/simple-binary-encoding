@@ -34,6 +34,7 @@ import static uk.co.real_logic.sbe.ir.GenerationUtil.concatTokens;
 import static uk.co.real_logic.sbe.ir.GenerationUtil.getMessageBody;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -873,7 +874,7 @@ public class TypeScriptGenerator implements CodeGenerator
                 indent + "    }\n",
                 Generators.toLowerFirstChar(propertyName),
                 generateArrayFieldNotPresentCondition(token.version(), indent),
-                generateGet(indent, "limit", lengthEncoding)));
+                generateGet("limit", lengthEncoding)));
 
             generateDataDecodeMethods(
                 sb, token, propertyName, sizeOfLengthField, lengthEncoding, characterEncoding, indent);
@@ -1027,7 +1028,7 @@ public class TypeScriptGenerator implements CodeGenerator
                 formatPropertyName(propertyName),
                 generateStringNotPresentCondition(token.version(), indent),
                 sizeOfLengthField,
-                generateGet(indent, "limit", encoding),
+                generateGet("limit", encoding),
                 characterEncoding));
         }
     }
@@ -1098,7 +1099,7 @@ public class TypeScriptGenerator implements CodeGenerator
             characterEncoding,
             maxLengthValue,
             sizeOfLengthField,
-            generatePut(indent + "       ", "limit", "length", encoding)));
+            generatePut("limit", "length", encoding)));
     }
 
     private void generateDataTypedDecoder(
@@ -1126,7 +1127,7 @@ public class TypeScriptGenerator implements CodeGenerator
             propertyName,
             generateArrayFieldNotPresentCondition(token.version(), indent),
             sizeOfLengthField,
-            generateGet(indent, "limit", lengthEncoding)));
+            generateGet("limit", lengthEncoding)));
     }
 
     private void generateDataTypedEncoder(
@@ -1158,7 +1159,7 @@ public class TypeScriptGenerator implements CodeGenerator
             propertyName,
             maxLengthValue,
             sizeOfLengthField,
-            generatePut(indent + "        ", "limit", "length", lengthEncoding)));
+            generatePut("limit", "length", lengthEncoding)));
     }
 
     private void generateBitSet(final List<Token> tokens) throws IOException
@@ -1344,7 +1345,7 @@ public class TypeScriptGenerator implements CodeGenerator
             "        return this;\n" +
             "    }\n",
             bitSetClassName,
-            generatePut("        ", "this.offset", literalValue, encoding)));
+            generatePut("this.offset", literalValue, encoding)));
 
         return sb;
     }
@@ -1619,7 +1620,7 @@ public class TypeScriptGenerator implements CodeGenerator
             propertyName,
             tsTypeName,
             generateFieldNotPresentCondition(inComposite, propertyToken.version(), encoding, indent),
-            generateGet(indent, "this.offset + " + offset, encoding));
+            generateGet("this.offset + " + offset, encoding));
     }
 
     private CharSequence generatePrimitivePropertyEncode(
@@ -1638,7 +1639,7 @@ public class TypeScriptGenerator implements CodeGenerator
             propertyName,
             tsTypeName,
             formatClassName(containingClassName),
-            generatePut(indent + "        ", "this.offset + " + offset, "value", encoding));
+            generatePut("this.offset + " + offset, "value", encoding));
     }
 
     private CharSequence generateFieldNotPresentCondition(
@@ -1689,7 +1690,7 @@ public class TypeScriptGenerator implements CodeGenerator
             generateFieldNotPresentCondition(inComposite, propertyToken.version(), encoding, indent),
             offset,
             typeSize,
-            generateGet(indent, "pos", encoding)));
+            generateGet("pos", encoding)));
 
         if (encoding.primitiveType() == PrimitiveType.CHAR)
         {
@@ -1766,7 +1767,7 @@ public class TypeScriptGenerator implements CodeGenerator
             fieldLength,
             offset,
             typeSize,
-            generatePut(indent + "        ", "pos", "value", encoding)));
+            generatePut("pos", "value", encoding)));
 
         if (encoding.primitiveType() == PrimitiveType.CHAR)
         {
@@ -2149,7 +2150,7 @@ public class TypeScriptGenerator implements CodeGenerator
                 propertyName,
                 enumName,
                 generatePropertyNotPresentCondition(inComposite, DECODER, fieldToken, enumName, indent),
-                generateGet(indent, "this.offset + " + typeToken.offset(), encoding),
+                generateGet("this.offset + " + typeToken.offset(), encoding),
                 enumName);
         }
     }
@@ -2176,7 +2177,7 @@ public class TypeScriptGenerator implements CodeGenerator
             propertyName,
             enumName,
             formatClassName(containingClassName),
-            generatePut(indent + "        ", "this.offset + " + offset, coercedValue, encoding));
+            generatePut("this.offset + " + offset, coercedValue, encoding));
     }
 
     private CharSequence generateBitSetProperty(
@@ -2247,11 +2248,10 @@ public class TypeScriptGenerator implements CodeGenerator
         return sb;
     }
 
-    private String generateGet(final String outerIndent, final String index, final Encoding encoding)
+    private String generateGet(final String index, final Encoding encoding)
     {
         final String byteOrder = byteOrderString(encoding);
         final PrimitiveType type = encoding.primitiveType();
-        final String indent = outerIndent + "            "; // TODO clean up
         switch (type)
         {
             case CHAR:
@@ -2277,24 +2277,9 @@ public class TypeScriptGenerator implements CodeGenerator
                 return "this.buffer.getFloat32(" + index + byteOrder + ")";
 
             case INT64:
-                // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
-                {
-                    return "(this.buffer.getInt32(" + index + ", true) |\n" +
-                            indent + "(this.buffer.getInt32(" + index + " + 4, true) << 32))";
-                }
-                return "((this.buffer.getInt32(" + index + ", false) << 32) |\n" +
-                        indent + "this.buffer.getInt32(" + index + " + 4, false))";
-
             case UINT64:
-                // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
-                {
-                    return "(this.buffer.getUint32(" + index + ", true) |\n" +
-                            indent + "(this.buffer.getUint32(" + index + " + 4, true) << 32))";
-                }
-                return "((this.buffer.getUint32(" + index + ", false) << 32) |\n" +
-                        indent + "this.buffer.getUint32(" + index + " + 4, false))";
+                generate53bitHelpers();
+                return "getInt53(this.buffer, " + index + byteOrder + ")";
 
             case DOUBLE:
                 return "this.buffer.getFloat64(" + index + byteOrder + ")";
@@ -2303,7 +2288,7 @@ public class TypeScriptGenerator implements CodeGenerator
         throw new IllegalArgumentException("primitive type not supported: " + type);
     }
 
-    private String generatePut(final String indent, final String index, final String value, final Encoding encoding)
+    private String generatePut(final String index, final String value, final Encoding encoding)
     {
         final String byteOrder = byteOrderString(encoding);
         final PrimitiveType type = encoding.primitiveType();
@@ -2332,30 +2317,70 @@ public class TypeScriptGenerator implements CodeGenerator
                 return "this.buffer.setFloat32(" + index + ", " + value + byteOrder + ")";
 
             case INT64:
-                // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
-                {
-                    return "this.buffer.setInt32(" + index + " + 4, " + value + " & ((1 << 32) - 1), true);\n" +
-                            indent + "this.buffer.setInt32(" + index + ", " + value + " >> 32, true)";
-                }
-                return "this.buffer.setInt32(" + index + " + 4, " + value + " >> 32, false);\n" +
-                        indent + "this.buffer.setInt32(" + index + ", " + value + " & ((1 << 32) - 1), false)";
-
             case UINT64:
-                // TODO test
-                if (encoding.byteOrder().equals(ByteOrder.LITTLE_ENDIAN))
-                {
-                    return "this.buffer.setUint32(" + index + " + 4, " + value + " & ((1 << 32) - 1), true);\n" +
-                            indent + "this.buffer.setUint32(" + index + ", " + value + " >> 32, true)";
-                }
-                return "this.buffer.setUint32(" + index + " + 4, " + value + " >> 32, false);\n" +
-                        indent + "this.buffer.setUint32(" + index + ", " + value + " & ((1 << 32) - 1), false)";
+                generate53bitHelpers();
+                return "setInt53(this.buffer, " + index + ", " + value + byteOrder + ")";
 
             case DOUBLE:
                 return "this.buffer.setFloat64(" + index + ", " + value + byteOrder + ")";
         }
 
         throw new IllegalArgumentException("primitive type not supported: " + type);
+    }
+
+    private void generate53bitHelpers()
+    {
+        try (Writer out = outputManager.createOutput("Int53Helpers"))
+        {
+            out.append("const MASK_32 = 0xFFFFFFFF;\n");
+            out.append("const POW_2_32 = 0x100000000;\n");
+            out.append("const MASK_SIGN_BIT = 0x80000000;\n\n");
+
+            out.append("export function setInt53(buffer: DataView, offset: number,\n");
+            out.append("                         value: number, isLittleEndian: boolean = false) {\n");
+            out.append("    const lsbsOffset = isLittleEndian ? offset : offset + 4;\n");
+            out.append("    const msbsOffset = isLittleEndian ? offset + 4 : offset;\n");
+            out.append("    const absValue = Math.abs(value);\n");
+            out.append("    let lsbs = (absValue & MASK_32) >>> 0;\n");
+            out.append("    let msbs = (absValue - lsbs) / POW_2_32;\n");
+            out.append("    if (value < 0) {\n");
+            out.append("        const twosComplementOfLsbs = MASK_32 - lsbs + 1;\n");
+            out.append("        lsbs = (twosComplementOfLsbs & MASK_32) >>> 0;\n");
+            out.append("        const lsbOverflow = (twosComplementOfLsbs - lsbs) / POW_2_32;\n");
+            out.append("        const twosComplementOfMsbs = MASK_32 - msbs + lsbOverflow;\n");
+            out.append("        msbs = (twosComplementOfMsbs & MASK_32) >>> 0;\n");
+            out.append("        const msbOverflow = (twosComplementOfMsbs - msbs) / POW_2_32;\n");
+            out.append("        lsbs = lsbs + msbOverflow;\n");
+            out.append("    }\n");
+            out.append("    buffer.setUint32(lsbsOffset, lsbs, isLittleEndian);\n");
+            out.append("    buffer.setUint32(msbsOffset, msbs, isLittleEndian);\n");
+            out.append("}\n\n");
+
+            out.append("export function getInt53(buffer: DataView, offset: number,\n");
+            out.append("                         isLittleEndian: boolean = false) {\n");
+            out.append("    const lsbsOffset = isLittleEndian ? offset : offset + 4;\n");
+            out.append("    const msbsOffset = isLittleEndian ? offset + 4 : offset;\n");
+            out.append("    let lsbs  = buffer.getUint32(lsbsOffset, isLittleEndian);\n");
+            out.append("    let msbs = buffer.getUint32(msbsOffset, isLittleEndian);\n");
+            out.append("    let multiplier = 1;\n");
+            out.append("    const isNegative = (MASK_SIGN_BIT & msbs) !== 0;\n");
+            out.append("    if (isNegative) {\n");
+            out.append("        const twosComplementOfLsbs = MASK_32 - lsbs + 1;\n");
+            out.append("        lsbs = (twosComplementOfLsbs & MASK_32) >>> 0;\n");
+            out.append("        const lsbOverflow = (twosComplementOfLsbs - lsbs) / POW_2_32;\n");
+            out.append("        const twosComplementOfMsbs = MASK_32 - msbs + lsbOverflow;\n");
+            out.append("        msbs = (twosComplementOfMsbs & MASK_32) >>> 0;\n");
+            out.append("        const msbOverflow = (twosComplementOfMsbs - msbs) / POW_2_32;\n");
+            out.append("        lsbs = lsbs + msbOverflow;\n");
+            out.append("        multiplier = -1;\n");
+            out.append("    }\n");
+            out.append("    return multiplier * (msbs * POW_2_32 + lsbs);\n");
+            out.append("}\n");
+        }
+        catch (final IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private String generateChoiceGet(final PrimitiveType type, final String bitIndex, final String byteOrder)

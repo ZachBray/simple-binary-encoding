@@ -7,15 +7,21 @@ const MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
 describe("53-bit integer serialization", () => {
     const cases = [
         MIN_SAFE_INTEGER,
+        -1 * (1 << 30) * (1 << 20),
         -1 * (1 << 30) * (1 << 10),
+        -1 * (1 << 30) * (1 << 10) - 39,
         -1 * (1 << 30),
-        -1000,
+        -999,
+        -41,
         -1,
         0,
         1,
-        1000,
+        41,
+        999,
         (1 << 30),
         (1 << 30) * (1 << 10),
+        (1 << 30) * (1 << 10) + 39,
+        (1 << 30) * (1 << 20),
         MAX_SAFE_INTEGER,
     ];
 
@@ -33,7 +39,7 @@ describe("53-bit integer serialization", () => {
             encoder.serialNumber(value);
             const observation = decoder.serialNumber();
             // Assert
-            expect(observation).to.equal(value);
+            expect(observation).to.eq(value);
         });
     }
 });
