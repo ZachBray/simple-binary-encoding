@@ -11,6 +11,46 @@ import org.agrona.DirectBuffer;
 @SuppressWarnings("all")
 public final class TokenCodecDecoder
 {
+    private static final boolean DEBUG_MODE = !Boolean.getBoolean("agrona.disable.bounds.checks");
+
+    private static final int STATE_NOT_WRAPPED = 1;
+
+    private static final int STATE_V0_BLOCK = 2;
+
+    private static final int STATE_V0_NAME_FILLED = 3;
+
+    private static final int STATE_V0_CONSTVALUE_FILLED = 4;
+
+    private static final int STATE_V0_MINVALUE_FILLED = 5;
+
+    private static final int STATE_V0_MAXVALUE_FILLED = 6;
+
+    private static final int STATE_V0_NULLVALUE_FILLED = 7;
+
+    private static final int STATE_V0_CHARACTERENCODING_FILLED = 8;
+
+    private static final int STATE_V0_EPOCH_FILLED = 9;
+
+    private static final int STATE_V0_TIMEUNIT_FILLED = 10;
+
+    private static final int STATE_V0_SEMANTICTYPE_FILLED = 11;
+
+    private static final int STATE_V0_DESCRIPTION_FILLED = 12;
+
+    private static final int STATE_V0_REFERENCEDNAME_FILLED = 13;
+
+    private int fieldOrderState = STATE_NOT_WRAPPED;
+
+    private int fieldOrderState()
+    {
+        return fieldOrderState;
+    }
+
+    private void fieldOrderState(int newState)
+    {
+        fieldOrderState = newState;
+    }
+
     public static final int BLOCK_LENGTH = 28;
     public static final int TEMPLATE_ID = 2;
     public static final int SCHEMA_ID = 1;
@@ -81,6 +121,18 @@ public final class TokenCodecDecoder
         this.actingBlockLength = actingBlockLength;
         this.actingVersion = actingVersion;
         limit(offset + actingBlockLength);
+
+        if (DEBUG_MODE)
+        {
+            switch(actingVersion)            {
+                case 0:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+            }
+        }
 
         return this;
     }
@@ -182,6 +234,18 @@ public final class TokenCodecDecoder
 
     public int tokenOffset()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -233,6 +297,18 @@ public final class TokenCodecDecoder
 
     public int tokenSize()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 4, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -284,6 +360,18 @@ public final class TokenCodecDecoder
 
     public int fieldId()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 8, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -335,6 +423,18 @@ public final class TokenCodecDecoder
 
     public int tokenVersion()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 12, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -386,6 +486,18 @@ public final class TokenCodecDecoder
 
     public int componentTokenCount()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 16, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -422,11 +534,35 @@ public final class TokenCodecDecoder
 
     public short signalRaw()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return ((short)(buffer.getByte(offset + 20) & 0xFF));
     }
 
     public SignalCodec signal()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return SignalCodec.get(((short)(buffer.getByte(offset + 20) & 0xFF)));
     }
 
@@ -463,11 +599,35 @@ public final class TokenCodecDecoder
 
     public short primitiveTypeRaw()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return ((short)(buffer.getByte(offset + 21) & 0xFF));
     }
 
     public PrimitiveTypeCodec primitiveType()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return PrimitiveTypeCodec.get(((short)(buffer.getByte(offset + 21) & 0xFF)));
     }
 
@@ -504,11 +664,35 @@ public final class TokenCodecDecoder
 
     public short byteOrderRaw()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return ((short)(buffer.getByte(offset + 22) & 0xFF));
     }
 
     public ByteOrderCodec byteOrder()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return ByteOrderCodec.get(((short)(buffer.getByte(offset + 22) & 0xFF)));
     }
 
@@ -545,11 +729,35 @@ public final class TokenCodecDecoder
 
     public short presenceRaw()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return ((short)(buffer.getByte(offset + 23) & 0xFF));
     }
 
     public PresenceCodec presence()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return PresenceCodec.get(((short)(buffer.getByte(offset + 23) & 0xFF)));
     }
 
@@ -601,6 +809,18 @@ public final class TokenCodecDecoder
 
     public int deprecated()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_BLOCK);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         return buffer.getInt(offset + 24, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -643,6 +863,18 @@ public final class TokenCodecDecoder
 
     public int skipName()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_NAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -654,6 +886,18 @@ public final class TokenCodecDecoder
 
     public int getName(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_NAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -666,6 +910,18 @@ public final class TokenCodecDecoder
 
     public int getName(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_NAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -687,6 +943,18 @@ public final class TokenCodecDecoder
 
     public String name()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_BLOCK:
+                    fieldOrderState(STATE_V0_NAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -741,6 +1009,18 @@ public final class TokenCodecDecoder
 
     public int skipConstValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NAME_FILLED:
+                    fieldOrderState(STATE_V0_CONSTVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -752,6 +1032,18 @@ public final class TokenCodecDecoder
 
     public int getConstValue(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NAME_FILLED:
+                    fieldOrderState(STATE_V0_CONSTVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -764,6 +1056,18 @@ public final class TokenCodecDecoder
 
     public int getConstValue(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NAME_FILLED:
+                    fieldOrderState(STATE_V0_CONSTVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -785,6 +1089,18 @@ public final class TokenCodecDecoder
 
     public String constValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NAME_FILLED:
+                    fieldOrderState(STATE_V0_CONSTVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -839,6 +1155,18 @@ public final class TokenCodecDecoder
 
     public int skipMinValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CONSTVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MINVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -850,6 +1178,18 @@ public final class TokenCodecDecoder
 
     public int getMinValue(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CONSTVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MINVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -862,6 +1202,18 @@ public final class TokenCodecDecoder
 
     public int getMinValue(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CONSTVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MINVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -883,6 +1235,18 @@ public final class TokenCodecDecoder
 
     public String minValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CONSTVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MINVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -937,6 +1301,18 @@ public final class TokenCodecDecoder
 
     public int skipMaxValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MINVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MAXVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -948,6 +1324,18 @@ public final class TokenCodecDecoder
 
     public int getMaxValue(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MINVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MAXVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -960,6 +1348,18 @@ public final class TokenCodecDecoder
 
     public int getMaxValue(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MINVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MAXVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -981,6 +1381,18 @@ public final class TokenCodecDecoder
 
     public String maxValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MINVALUE_FILLED:
+                    fieldOrderState(STATE_V0_MAXVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1035,6 +1447,18 @@ public final class TokenCodecDecoder
 
     public int skipNullValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MAXVALUE_FILLED:
+                    fieldOrderState(STATE_V0_NULLVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1046,6 +1470,18 @@ public final class TokenCodecDecoder
 
     public int getNullValue(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MAXVALUE_FILLED:
+                    fieldOrderState(STATE_V0_NULLVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1058,6 +1494,18 @@ public final class TokenCodecDecoder
 
     public int getNullValue(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MAXVALUE_FILLED:
+                    fieldOrderState(STATE_V0_NULLVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1079,6 +1527,18 @@ public final class TokenCodecDecoder
 
     public String nullValue()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_MAXVALUE_FILLED:
+                    fieldOrderState(STATE_V0_NULLVALUE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1133,6 +1593,18 @@ public final class TokenCodecDecoder
 
     public int skipCharacterEncoding()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NULLVALUE_FILLED:
+                    fieldOrderState(STATE_V0_CHARACTERENCODING_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1144,6 +1616,18 @@ public final class TokenCodecDecoder
 
     public int getCharacterEncoding(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NULLVALUE_FILLED:
+                    fieldOrderState(STATE_V0_CHARACTERENCODING_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1156,6 +1640,18 @@ public final class TokenCodecDecoder
 
     public int getCharacterEncoding(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NULLVALUE_FILLED:
+                    fieldOrderState(STATE_V0_CHARACTERENCODING_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1177,6 +1673,18 @@ public final class TokenCodecDecoder
 
     public String characterEncoding()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_NULLVALUE_FILLED:
+                    fieldOrderState(STATE_V0_CHARACTERENCODING_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1231,6 +1739,18 @@ public final class TokenCodecDecoder
 
     public int skipEpoch()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CHARACTERENCODING_FILLED:
+                    fieldOrderState(STATE_V0_EPOCH_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1242,6 +1762,18 @@ public final class TokenCodecDecoder
 
     public int getEpoch(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CHARACTERENCODING_FILLED:
+                    fieldOrderState(STATE_V0_EPOCH_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1254,6 +1786,18 @@ public final class TokenCodecDecoder
 
     public int getEpoch(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CHARACTERENCODING_FILLED:
+                    fieldOrderState(STATE_V0_EPOCH_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1275,6 +1819,18 @@ public final class TokenCodecDecoder
 
     public String epoch()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_CHARACTERENCODING_FILLED:
+                    fieldOrderState(STATE_V0_EPOCH_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1329,6 +1885,18 @@ public final class TokenCodecDecoder
 
     public int skipTimeUnit()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_EPOCH_FILLED:
+                    fieldOrderState(STATE_V0_TIMEUNIT_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1340,6 +1908,18 @@ public final class TokenCodecDecoder
 
     public int getTimeUnit(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_EPOCH_FILLED:
+                    fieldOrderState(STATE_V0_TIMEUNIT_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1352,6 +1932,18 @@ public final class TokenCodecDecoder
 
     public int getTimeUnit(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_EPOCH_FILLED:
+                    fieldOrderState(STATE_V0_TIMEUNIT_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1373,6 +1965,18 @@ public final class TokenCodecDecoder
 
     public String timeUnit()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_EPOCH_FILLED:
+                    fieldOrderState(STATE_V0_TIMEUNIT_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1427,6 +2031,18 @@ public final class TokenCodecDecoder
 
     public int skipSemanticType()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_TIMEUNIT_FILLED:
+                    fieldOrderState(STATE_V0_SEMANTICTYPE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1438,6 +2054,18 @@ public final class TokenCodecDecoder
 
     public int getSemanticType(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_TIMEUNIT_FILLED:
+                    fieldOrderState(STATE_V0_SEMANTICTYPE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1450,6 +2078,18 @@ public final class TokenCodecDecoder
 
     public int getSemanticType(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_TIMEUNIT_FILLED:
+                    fieldOrderState(STATE_V0_SEMANTICTYPE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1471,6 +2111,18 @@ public final class TokenCodecDecoder
 
     public String semanticType()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_TIMEUNIT_FILLED:
+                    fieldOrderState(STATE_V0_SEMANTICTYPE_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1525,6 +2177,18 @@ public final class TokenCodecDecoder
 
     public int skipDescription()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_SEMANTICTYPE_FILLED:
+                    fieldOrderState(STATE_V0_DESCRIPTION_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1536,6 +2200,18 @@ public final class TokenCodecDecoder
 
     public int getDescription(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_SEMANTICTYPE_FILLED:
+                    fieldOrderState(STATE_V0_DESCRIPTION_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1548,6 +2224,18 @@ public final class TokenCodecDecoder
 
     public int getDescription(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_SEMANTICTYPE_FILLED:
+                    fieldOrderState(STATE_V0_DESCRIPTION_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1569,6 +2257,18 @@ public final class TokenCodecDecoder
 
     public String description()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_SEMANTICTYPE_FILLED:
+                    fieldOrderState(STATE_V0_DESCRIPTION_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1623,6 +2323,18 @@ public final class TokenCodecDecoder
 
     public int skipReferencedName()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_DESCRIPTION_FILLED:
+                    fieldOrderState(STATE_V0_REFERENCEDNAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1634,6 +2346,18 @@ public final class TokenCodecDecoder
 
     public int getReferencedName(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_DESCRIPTION_FILLED:
+                    fieldOrderState(STATE_V0_REFERENCEDNAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1646,6 +2370,18 @@ public final class TokenCodecDecoder
 
     public int getReferencedName(final byte[] dst, final int dstOffset, final int length)
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_DESCRIPTION_FILLED:
+                    fieldOrderState(STATE_V0_REFERENCEDNAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
@@ -1667,6 +2403,18 @@ public final class TokenCodecDecoder
 
     public String referencedName()
     {
+        if (DEBUG_MODE)
+        {
+            switch (fieldOrderState())
+            {
+                case STATE_V0_DESCRIPTION_FILLED:
+                    fieldOrderState(STATE_V0_REFERENCEDNAME_FILLED);
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+            }
+        }
+
         final int headerLength = 2;
         final int limit = parentMessage.limit();
         final int dataLength = (buffer.getShort(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
