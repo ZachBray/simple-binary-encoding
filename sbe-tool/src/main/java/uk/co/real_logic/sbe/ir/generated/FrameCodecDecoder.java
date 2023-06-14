@@ -13,26 +13,43 @@ public final class FrameCodecDecoder
 {
     private static final boolean DEBUG_MODE = !Boolean.getBoolean("agrona.disable.bounds.checks");
 
-    private static final int STATE_NOT_WRAPPED = 1;
-
-    private static final int STATE_V0_BLOCK = 2;
-
-    private static final int STATE_V0_PACKAGENAME_FILLED = 3;
-
-    private static final int STATE_V0_NAMESPACENAME_FILLED = 4;
-
-    private static final int STATE_V0_SEMANTICVERSION_FILLED = 5;
-
-    private int fieldOrderState = STATE_NOT_WRAPPED;
-
-    private int fieldOrderState()
+    /**
+     * The states in which a encoder/decoder/codec can live.
+     *
+     * <p>The state machine diagram below describes the valid state transitions
+     * according to the order in which fields may be accessed safely.
+     *
+     * <pre>{@code
+     *   digraph G {
+     *       NOT_WRAPPED -> V0_BLOCK [label="  .wrap(...)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  .irId(value)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  .irVersion(value)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  .schemaVersion(value)  "];
+     *       V0_BLOCK -> V0_PACKAGENAME_DONE [label="  .packageName(value)  "];
+     *       V0_PACKAGENAME_DONE -> V0_NAMESPACENAME_DONE [label="  .namespaceName(value)  "];
+     *       V0_NAMESPACENAME_DONE -> V0_SEMANTICVERSION_DONE [label="  .semanticVersion(value)  "];
+     *   }
+     * }</pre>
+     */
+    private enum CodecState
     {
-        return fieldOrderState;
+        NOT_WRAPPED,
+        V0_BLOCK,
+        V0_PACKAGENAME_DONE,
+        V0_NAMESPACENAME_DONE,
+        V0_SEMANTICVERSION_DONE,
     }
 
-    private void fieldOrderState(int newState)
+    private CodecState codecState = CodecState.NOT_WRAPPED;
+
+    private CodecState codecState()
     {
-        fieldOrderState = newState;
+        return codecState;
+    }
+
+    private void codecState(CodecState newState)
+    {
+        codecState = newState;
     }
 
     public static final int BLOCK_LENGTH = 12;
@@ -110,10 +127,10 @@ public final class FrameCodecDecoder
         {
             switch(actingVersion)            {
                 case 0:
-                    fieldOrderState(STATE_V0_BLOCK);
+                    codecState(CodecState.V0_BLOCK);
                     break;
                 default:
-                    fieldOrderState(STATE_V0_BLOCK);
+                    codecState(CodecState.V0_BLOCK);
                     break;
             }
         }
@@ -220,13 +237,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_BLOCK);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_BLOCK);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"irId\" in state: " + codecState());
             }
         }
 
@@ -283,13 +300,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_BLOCK);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_BLOCK);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"irVersion\" in state: " + codecState());
             }
         }
 
@@ -346,13 +363,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_BLOCK);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_BLOCK);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"schemaVersion\" in state: " + codecState());
             }
         }
 
@@ -394,13 +411,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -412,13 +429,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -435,13 +452,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -459,13 +476,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -483,13 +500,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -504,13 +521,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_BLOCK:
-                    fieldOrderState(STATE_V0_PACKAGENAME_FILLED);
+                case V0_BLOCK:
+                    codecState(CodecState.V0_PACKAGENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"packageName\" in state: " + codecState());
             }
         }
 
@@ -564,13 +581,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -582,13 +599,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -605,13 +622,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -629,13 +646,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -653,13 +670,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -674,13 +691,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_PACKAGENAME_FILLED:
-                    fieldOrderState(STATE_V0_NAMESPACENAME_FILLED);
+                case V0_PACKAGENAME_DONE:
+                    codecState(CodecState.V0_NAMESPACENAME_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + codecState());
             }
         }
 
@@ -734,13 +751,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
@@ -752,13 +769,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
@@ -775,13 +792,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
@@ -799,13 +816,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
@@ -823,13 +840,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
@@ -844,13 +861,13 @@ public final class FrameCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (fieldOrderState())
+            switch (codecState())
             {
-                case STATE_V0_NAMESPACENAME_FILLED:
-                    fieldOrderState(STATE_V0_SEMANTICVERSION_FILLED);
+                case V0_NAMESPACENAME_DONE:
+                    codecState(CodecState.V0_SEMANTICVERSION_DONE);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected state: " + fieldOrderState());
+                    throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + codecState());
             }
         }
 
