@@ -266,13 +266,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"tokenOffset\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"tokenOffset\" in state: " + codecState());
             }
         }
 
@@ -329,13 +325,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"tokenSize\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"tokenSize\" in state: " + codecState());
             }
         }
 
@@ -392,13 +384,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"fieldId\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"fieldId\" in state: " + codecState());
             }
         }
 
@@ -455,13 +443,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"tokenVersion\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"tokenVersion\" in state: " + codecState());
             }
         }
 
@@ -518,13 +502,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"componentTokenCount\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"componentTokenCount\" in state: " + codecState());
             }
         }
 
@@ -566,13 +546,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"signal\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"signal\" in state: " + codecState());
             }
         }
 
@@ -583,13 +559,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"signal\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"signal\" in state: " + codecState());
             }
         }
 
@@ -631,13 +603,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"primitiveType\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"primitiveType\" in state: " + codecState());
             }
         }
 
@@ -648,13 +616,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"primitiveType\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"primitiveType\" in state: " + codecState());
             }
         }
 
@@ -696,13 +660,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"byteOrder\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"byteOrder\" in state: " + codecState());
             }
         }
 
@@ -713,13 +673,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"byteOrder\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"byteOrder\" in state: " + codecState());
             }
         }
 
@@ -761,13 +717,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"presence\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"presence\" in state: " + codecState());
             }
         }
 
@@ -778,13 +730,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"presence\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"presence\" in state: " + codecState());
             }
         }
 
@@ -841,13 +789,9 @@ public final class TokenCodecDecoder
     {
         if (DEBUG_MODE)
         {
-            switch (codecState())
+            if (codecState() == CodecState.NOT_WRAPPED)
             {
-                case V0_BLOCK:
-                    codecState(CodecState.V0_BLOCK);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot access field \"deprecated\" in state: " + codecState());
+                throw new IllegalStateException("Cannot access field \"deprecated\" in state: " + codecState());
             }
         }
 
