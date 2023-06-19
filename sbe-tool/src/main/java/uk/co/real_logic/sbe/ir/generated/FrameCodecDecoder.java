@@ -11,7 +11,11 @@ import org.agrona.DirectBuffer;
 @SuppressWarnings("all")
 public final class FrameCodecDecoder
 {
-    private static final boolean DEBUG_MODE = !Boolean.getBoolean("agrona.disable.bounds.checks");
+    private static final boolean ENABLE_BOUNDS_CHECKS = !Boolean.getBoolean("agrona.disable.bounds.checks");
+
+    private static final boolean ENABLE_ACCESS_ORDER_CHECKS = Boolean.parseBoolean(System.getProperty(
+        "sbe.enable.access.order.checks",
+        Boolean.toString(ENABLE_BOUNDS_CHECKS)));
 
     /**
      * The states in which a encoder/decoder/codec can live.
@@ -123,7 +127,7 @@ public final class FrameCodecDecoder
         this.actingVersion = actingVersion;
         limit(offset + actingBlockLength);
 
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch(actingVersion)            {
                 case 0:
@@ -171,7 +175,7 @@ public final class FrameCodecDecoder
         final int decodedLength = encodedLength();
         limit(currentLimit);
 
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             codecState(currentCodecState);
         }
@@ -241,7 +245,7 @@ public final class FrameCodecDecoder
 
     public int irId()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             if (codecState() == CodecState.NOT_WRAPPED)
             {
@@ -300,7 +304,7 @@ public final class FrameCodecDecoder
 
     public int irVersion()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             if (codecState() == CodecState.NOT_WRAPPED)
             {
@@ -359,7 +363,7 @@ public final class FrameCodecDecoder
 
     public int schemaVersion()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             if (codecState() == CodecState.NOT_WRAPPED)
             {
@@ -403,7 +407,7 @@ public final class FrameCodecDecoder
 
     public int packageNameLength()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -421,7 +425,7 @@ public final class FrameCodecDecoder
 
     public int skipPackageName()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -444,7 +448,7 @@ public final class FrameCodecDecoder
 
     public int getPackageName(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -468,7 +472,7 @@ public final class FrameCodecDecoder
 
     public int getPackageName(final byte[] dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -492,7 +496,7 @@ public final class FrameCodecDecoder
 
     public void wrapPackageName(final DirectBuffer wrapBuffer)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -513,7 +517,7 @@ public final class FrameCodecDecoder
 
     public String packageName()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -573,7 +577,7 @@ public final class FrameCodecDecoder
 
     public int namespaceNameLength()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -591,7 +595,7 @@ public final class FrameCodecDecoder
 
     public int skipNamespaceName()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -614,7 +618,7 @@ public final class FrameCodecDecoder
 
     public int getNamespaceName(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -638,7 +642,7 @@ public final class FrameCodecDecoder
 
     public int getNamespaceName(final byte[] dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -662,7 +666,7 @@ public final class FrameCodecDecoder
 
     public void wrapNamespaceName(final DirectBuffer wrapBuffer)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -683,7 +687,7 @@ public final class FrameCodecDecoder
 
     public String namespaceName()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -743,7 +747,7 @@ public final class FrameCodecDecoder
 
     public int semanticVersionLength()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -761,7 +765,7 @@ public final class FrameCodecDecoder
 
     public int skipSemanticVersion()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -784,7 +788,7 @@ public final class FrameCodecDecoder
 
     public int getSemanticVersion(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -808,7 +812,7 @@ public final class FrameCodecDecoder
 
     public int getSemanticVersion(final byte[] dst, final int dstOffset, final int length)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -832,7 +836,7 @@ public final class FrameCodecDecoder
 
     public void wrapSemanticVersion(final DirectBuffer wrapBuffer)
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
@@ -853,7 +857,7 @@ public final class FrameCodecDecoder
 
     public String semanticVersion()
     {
-        if (DEBUG_MODE)
+        if (ENABLE_ACCESS_ORDER_CHECKS)
         {
             switch (codecState())
             {
