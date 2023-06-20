@@ -252,7 +252,8 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"irId\" in state: " + CodecStates.name(codecState()));
+            throw new IllegalStateException("Cannot access field \"irId\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -316,7 +317,8 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"irVersion\" in state: " + CodecStates.name(codecState()));
+            throw new IllegalStateException("Cannot access field \"irVersion\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -380,7 +382,8 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"schemaVersion\" in state: " + CodecStates.name(codecState()));
+            throw new IllegalStateException("Cannot access field \"schemaVersion\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -448,7 +451,8 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_PACKAGENAME_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"packageName\" in state: " + CodecStates.name(codecState()));
+                throw new IllegalStateException("Cannot access field \"packageName\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -588,7 +592,8 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_NAMESPACENAME_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + CodecStates.name(codecState()));
+                throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -728,7 +733,8 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_SEMANTICVERSION_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + CodecStates.name(codecState()));
+                throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + CodecStates.name(codecState()) +
+                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
