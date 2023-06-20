@@ -20,18 +20,19 @@ public final class FrameCodecDecoder
     /**
      * The states in which a encoder/decoder/codec can live.
      *
-     * <p>The state machine diagram below describes the valid state transitions
-     * according to the order in which fields may be accessed safely.
+     * <p>The state machine diagram below, encoded in the dot language, describes
+     * the valid state transitions according to the order in which fields may be
+     * accessed safely. Tools such as PlantUML and Graphviz can render it.
      *
      * <pre>{@code
      *   digraph G {
-     *       NOT_WRAPPED -> V0_BLOCK [label="  .wrap(...)  "];
-     *       V0_BLOCK -> V0_BLOCK [label="  .irId(value)  "];
-     *       V0_BLOCK -> V0_BLOCK [label="  .irVersion(value)  "];
-     *       V0_BLOCK -> V0_BLOCK [label="  .schemaVersion(value)  "];
-     *       V0_BLOCK -> V0_PACKAGENAME_DONE [label="  .packageName(value)  "];
-     *       V0_PACKAGENAME_DONE -> V0_NAMESPACENAME_DONE [label="  .namespaceName(value)  "];
-     *       V0_NAMESPACENAME_DONE -> V0_SEMANTICVERSION_DONE [label="  .semanticVersion(value)  "];
+     *       NOT_WRAPPED -> V0_BLOCK [label="  wrap(?)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  irId(?)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  irVersion(?)  "];
+     *       V0_BLOCK -> V0_BLOCK [label="  schemaVersion(?)  "];
+     *       V0_BLOCK -> V0_PACKAGENAME_DONE [label="  packageName(?)  "];
+     *       V0_PACKAGENAME_DONE -> V0_NAMESPACENAME_DONE [label="  namespaceName(?)  "];
+     *       V0_NAMESPACENAME_DONE -> V0_SEMANTICVERSION_DONE [label="  semanticVersion(?)  "];
      *   }
      * }</pre>
      */
@@ -52,9 +53,23 @@ public final class FrameCodecDecoder
             "V0_SEMANTICVERSION_DONE",
         };
 
+        private static final String[] STATE_TRANSITIONS_LOOKUP =
+        {
+            "\"wrap(?)\"",
+            "\"irId(?)\", \"irVersion(?)\", \"schemaVersion(?)\", \"packageName(?)\"",
+            "\"namespaceName(?)\"",
+            "\"semanticVersion(?)\"",
+            "",
+        };
+
         private static String name(final int state)
         {
             return STATE_NAME_LOOKUP[state];
+        }
+
+        private static String transitions(final int state)
+        {
+            return STATE_TRANSITIONS_LOOKUP[state];
         }
     }
 
@@ -252,8 +267,10 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"irId\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+            throw new IllegalStateException("Illegal field access order. " +
+                "Cannot access field \"irId\" in state: " + CodecStates.name(codecState()) +
+                ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -317,8 +334,10 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"irVersion\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+            throw new IllegalStateException("Illegal field access order. " +
+                "Cannot access field \"irVersion\" in state: " + CodecStates.name(codecState()) +
+                ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -382,8 +401,10 @@ public final class FrameCodecDecoder
     {
         if (codecState() == CodecStates.NOT_WRAPPED)
         {
-            throw new IllegalStateException("Cannot access field \"schemaVersion\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+            throw new IllegalStateException("Illegal field access order. " +
+                "Cannot access field \"schemaVersion\" in state: " + CodecStates.name(codecState()) +
+                ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -451,8 +472,10 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_PACKAGENAME_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"packageName\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+                throw new IllegalStateException("Illegal field access order. " +
+                    "Cannot access field \"packageName\" in state: " + CodecStates.name(codecState()) +
+                    ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                    "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -592,8 +615,10 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_NAMESPACENAME_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"namespaceName\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+                throw new IllegalStateException("Illegal field access order. " +
+                    "Cannot access field \"namespaceName\" in state: " + CodecStates.name(codecState()) +
+                    ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                    "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
@@ -733,8 +758,10 @@ public final class FrameCodecDecoder
                 codecState(CodecStates.V0_SEMANTICVERSION_DONE);
                 break;
             default:
-                throw new IllegalStateException("Cannot access field \"semanticVersion\" in state: " + CodecStates.name(codecState()) +
-                    ". Please see the diagram in the Javadoc of the inner class #CodecStates.");
+                throw new IllegalStateException("Illegal field access order. " +
+                    "Cannot access field \"semanticVersion\" in state: " + CodecStates.name(codecState()) +
+                    ". Expected one of these transitions: [" + CodecStates.transitions(codecState()) +
+                    "]. Please see the diagram in the Javadoc of the inner class #CodecStates.");
         }
     }
 
