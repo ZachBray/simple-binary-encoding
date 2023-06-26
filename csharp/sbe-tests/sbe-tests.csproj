@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Org.SbeTool.Sbe.Tests</RootNamespace>
     <AssemblyName>Org.SbeTool.Sbe.UnitTests</AssemblyName>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Copyright>Copyright (C) Bill Segall 2018, MarketFactory Inc 2017, Adaptive 2014. All rights reserved.</Copyright>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
