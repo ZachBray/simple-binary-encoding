@@ -629,7 +629,6 @@ public final class CarDecoder
             count = (buffer.getShort(limit + 2, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
         }
 
-
         public FuelFiguresDecoder next()
         {
             if (index >= count)
@@ -866,7 +865,6 @@ public final class CarDecoder
             count = (buffer.getShort(limit + 2, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
         }
 
-
         public PerformanceFiguresDecoder next()
         {
             if (index >= count)
@@ -1022,7 +1020,6 @@ public final class CarDecoder
                 blockLength = (buffer.getShort(limit + 0, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
                 count = (buffer.getShort(limit + 2, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
             }
-
 
             public AccelerationDecoder next()
             {

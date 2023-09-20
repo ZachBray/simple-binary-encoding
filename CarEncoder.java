@@ -589,7 +589,6 @@ public final class CarEncoder
             buffer.putShort(limit + 2, (short)count, java.nio.ByteOrder.LITTLE_ENDIAN);
         }
 
-
         public FuelFiguresEncoder next()
         {
             if (index >= count)
@@ -603,7 +602,6 @@ public final class CarEncoder
 
             return this;
         }
-
 
         public int resetCountToIndex()
         {
@@ -789,7 +787,6 @@ public final class CarEncoder
             buffer.putShort(limit + 2, (short)count, java.nio.ByteOrder.LITTLE_ENDIAN);
         }
 
-
         public PerformanceFiguresEncoder next()
         {
             if (index >= count)
@@ -803,7 +800,6 @@ public final class CarEncoder
 
             return this;
         }
-
 
         public int resetCountToIndex()
         {
@@ -932,7 +928,6 @@ public final class CarEncoder
                 buffer.putShort(limit + 2, (short)count, java.nio.ByteOrder.LITTLE_ENDIAN);
             }
 
-
             public AccelerationEncoder next()
             {
                 if (index >= count)
@@ -946,7 +941,6 @@ public final class CarEncoder
 
                 return this;
             }
-
 
             public int resetCountToIndex()
             {
