@@ -1028,8 +1028,6 @@ public:
             *m_positionPtr = *m_positionPtr + 4;
         }
 
-    private:
-    public:
         static SBE_CONSTEXPR std::uint64_t sbeHeaderSize() SBE_NOEXCEPT
         {
             return 4;
@@ -1385,8 +1383,6 @@ public:
             *m_positionPtr = *m_positionPtr + 4;
         }
 
-    private:
-    public:
         static SBE_CONSTEXPR std::uint64_t sbeHeaderSize() SBE_NOEXCEPT
         {
             return 4;
@@ -1604,8 +1600,6 @@ public:
                 *m_positionPtr = *m_positionPtr + 4;
             }
 
-        private:
-        public:
             static SBE_CONSTEXPR std::uint64_t sbeHeaderSize() SBE_NOEXCEPT
             {
                 return 4;
