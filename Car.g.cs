@@ -1015,7 +1015,7 @@ namespace Baseline
             private int _index;
             private int _offset;
 
-            public void NotPresent()
+            internal void NotPresent()
             {
                 _count = 0;
                 _index = 0;
@@ -1316,7 +1316,7 @@ namespace Baseline
                 return "";
             }
 
-            void OnUsageDescriptionLengthAccessed()
+            private void OnUsageDescriptionLengthAccessed()
             {
                 switch (codecState())
                 {
@@ -1539,7 +1539,7 @@ namespace Baseline
             private int _index;
             private int _offset;
 
-            public void NotPresent()
+            internal void NotPresent()
             {
                 _count = 0;
                 _index = 0;
@@ -1833,7 +1833,7 @@ namespace Baseline
                 private int _index;
                 private int _offset;
 
-                public void NotPresent()
+                internal void NotPresent()
                 {
                     _count = 0;
                     _index = 0;
@@ -2210,7 +2210,7 @@ namespace Baseline
             return "";
         }
 
-        void OnManufacturerLengthAccessed()
+        private void OnManufacturerLengthAccessed()
         {
             switch (codecState())
             {
@@ -2365,7 +2365,7 @@ namespace Baseline
             return "";
         }
 
-        void OnModelLengthAccessed()
+        private void OnModelLengthAccessed()
         {
             switch (codecState())
             {
@@ -2512,7 +2512,7 @@ namespace Baseline
             return "";
         }
 
-        void OnActivationCodeLengthAccessed()
+        private void OnActivationCodeLengthAccessed()
         {
             switch (codecState())
             {

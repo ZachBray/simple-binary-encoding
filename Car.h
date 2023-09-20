@@ -1158,7 +1158,7 @@ public:
     }
 
     #if __cplusplus >= 201703L
-    SBE_NODISCARD std::string_view getVehicleCodeAsStringView() const 
+    SBE_NODISCARD std::string_view getVehicleCodeAsStringView() const
     {
 #if defined(ENABLE_ACCESS_ORDER_CHECKS)
         onVehicleCodeAccessed();
