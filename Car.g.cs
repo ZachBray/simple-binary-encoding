@@ -563,7 +563,7 @@ namespace Baseline
             private int _index;
             private int _offset;
 
-            public void NotPresent()
+            internal void NotPresent()
             {
                 _count = 0;
                 _index = 0;
@@ -877,7 +877,7 @@ namespace Baseline
             private int _index;
             private int _offset;
 
-            public void NotPresent()
+            internal void NotPresent()
             {
                 _count = 0;
                 _index = 0;
@@ -1031,7 +1031,7 @@ namespace Baseline
                 private int _index;
                 private int _offset;
 
-                public void NotPresent()
+                internal void NotPresent()
                 {
                     _count = 0;
                     _index = 0;
