@@ -818,7 +818,7 @@ public:
     }
 
     #if __cplusplus >= 201703L
-    SBE_NODISCARD std::string_view getVehicleCodeAsStringView() const  SBE_NOEXCEPT
+    SBE_NODISCARD std::string_view getVehicleCodeAsStringView() const SBE_NOEXCEPT
     {
         const char *buffer = m_buffer + m_offset + 28;
         std::size_t length = 0;
