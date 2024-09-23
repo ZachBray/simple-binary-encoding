@@ -23,6 +23,7 @@ plugins {
     id 'jvm-test-suite'
     alias(libs.plugins.shadow).apply(false)
     alias(libs.plugins.versions)
+    id "com.google.protobuf" version "0.9.4" apply false
 }
 
 defaultTasks 'clean', 'build'
@@ -583,12 +584,14 @@ project(':sbe-samples') {
 
 project(':sbe-benchmarks') {
     apply plugin: 'com.gradleup.shadow'
+    apply plugin: 'com.google.protobuf'
 
     dependencies {
         implementation libs.jmh.core
         annotationProcessor libs.jmh.generator.annprocess
         implementation project(':sbe-tool')
         implementation files("${layout.buildDirectory.get()}/classes/java/generated")
+        implementation 'com.google.protobuf:protobuf-java:4.28.2'
     }
 
     sourceSets {
@@ -612,7 +615,11 @@ project(':sbe-benchmarks') {
                 'sbe.java.encoding.buffer.type': 'org.agrona.concurrent.UnsafeBuffer',
                 'sbe.java.decoding.buffer.type': 'org.agrona.concurrent.UnsafeBuffer',
                 'sbe.generate.precedence.checks': 'false')
-        args = ['src/main/resources/car.xml', 'src/main/resources/fix-message-samples.xml']
+        args = [
+                'src/main/resources/car.xml',
+                'src/main/resources/fix-message-samples.xml',
+                'src/main/resources/simple.xml'
+        ]
     }
 
     shadowJar {
@@ -623,6 +630,22 @@ project(':sbe-benchmarks') {
 
     jar.finalizedBy shadowJar
     javadoc.enabled = false
+
+    protobuf {
+        protoc {
+            artifact = 'com.google.protobuf:protoc:4.28.2'
+        }
+    }
+
+    tasks.named('extractIncludeProto').configure {
+        enabled false
+//        dependsOn 'compileGeneratedJava'
+    }
+
+    tasks.named('extractIncludeTestProto').configure {
+//        dependsOn 'compileGeneratedTestJava'
+        enabled false
+    }
 }
 
 tasks.register('generateRustExamples', JavaExec) {

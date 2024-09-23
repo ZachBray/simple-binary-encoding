@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   package="uk.co.real_logic.sbe.benchmarks"
+                   id="2"
+                   version="1"
+                   byteOrder="littleEndian">
+    <types>
+        <composite name="messageHeader" description="Message identifiers and length of message root">
+            <type name="blockLength" primitiveType="uint16"/>
+            <type name="templateId" primitiveType="uint16"/>
+            <type name="schemaId" primitiveType="uint16"/>
+            <type name="version" primitiveType="uint16"/>
+        </composite>
+
+        <type name="Symbol" primitiveType="char" characterEncoding="US-ASCII" length="6"/>
+    </types>
+
+    <sbe:message name="Foo" id="1">
+        <field name="bar" id="1" type="int64"/>
+        <field name="baz" id="2" type="Symbol" />
+        <field name="qux" id="3" type="double"/>
+    </sbe:message>
+</sbe:messageSchema>
