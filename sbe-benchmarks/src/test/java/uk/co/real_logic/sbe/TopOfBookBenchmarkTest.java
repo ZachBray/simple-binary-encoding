@@ -16,9 +16,9 @@
 
 package uk.co.real_logic.sbe;
 
-import uk.co.real_logic.protobuf.Simple;
-import uk.co.real_logic.sbe.benchmarks.FooDecoder;
+import uk.co.real_logic.protobuf.TopOfBook;
 import uk.co.real_logic.sbe.benchmarks.MessageHeaderDecoder;
+import uk.co.real_logic.sbe.benchmarks.TopOfBookDataDecoder;
 import org.agrona.io.DirectBufferInputStream;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.infra.Blackhole;
@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FooBenchmarkTest
+public class TopOfBookBenchmarkTest
 {
     private final Blackhole blackhole = new Blackhole(
         "Today's password is swordfish. I understand instantiating Blackholes directly is dangerous."
@@ -36,46 +36,41 @@ public class FooBenchmarkTest
     @Test
     void sbeBenchmarkShouldEncodeData()
     {
-        final FooBenchmark.SbeState state = new FooBenchmark.SbeState();
-        new FooBenchmark().sbeEncode(state, blackhole);
-        final FooDecoder fooDecoder = new FooDecoder();
+        final TopOfBookBenchmark.SbeState state = new TopOfBookBenchmark.SbeState();
+        new TopOfBookBenchmark().sbeEncode(state, blackhole);
+        final TopOfBookDataDecoder decoder = new TopOfBookDataDecoder();
         final MessageHeaderDecoder messageHeaderDecoder = new MessageHeaderDecoder();
         messageHeaderDecoder.wrap(state.buffer, 0);
-        fooDecoder.wrap(
+        decoder.wrap(
             state.buffer,
             messageHeaderDecoder.encodedLength(),
             messageHeaderDecoder.blockLength(),
             messageHeaderDecoder.version()
         );
 
-        assertEquals(Long.MIN_VALUE, fooDecoder.bar());
-        assertEquals("EURUSD", fooDecoder.baz());
-        assertEquals(42.1, fooDecoder.qux());
+        assertEquals(1L, decoder.bestBid().mantissa());
+        assertEquals(2L, decoder.bestAsk().mantissa());
+        assertEquals(4L, decoder.lastTradedPrice().mantissa());
+        assertEquals(8L, decoder.totalTradedVolume());
+        assertEquals(16L, decoder.high().mantissa());
+        assertEquals(32L, decoder.low().mantissa());
+        assertEquals(67L, decoder.limit()); // message length
     }
 
     @Test
     void protobufBenchmarkShouldEncodeData() throws IOException
     {
-        final FooBenchmark.ProtobufState state = new FooBenchmark.ProtobufState();
-        new FooBenchmark().protobufEncode(state, blackhole);
+        final TopOfBookBenchmark.ProtobufState state = new TopOfBookBenchmark.ProtobufState();
+        new TopOfBookBenchmark().protobufEncode(state, blackhole);
         final DirectBufferInputStream inputStream = new DirectBufferInputStream(state.buffer, 0, state.encodedLength);
-        final Simple.Foo foo = Simple.Foo.parseFrom(inputStream);
+        final TopOfBook.TopOfBookData data = TopOfBook.TopOfBookData.parseFrom(inputStream);
 
-        assertEquals(Long.MIN_VALUE, foo.getBar());
-        assertEquals("EURUSD", foo.getBaz());
-        assertEquals(42.1, foo.getQux());
-    }
-
-    @Test
-    void protobuf2BenchmarkShouldEncodeData() throws IOException
-    {
-        final FooBenchmark.ProtobufState state = new FooBenchmark.ProtobufState();
-        new FooBenchmark().protobufEncode2(state, blackhole);
-        final DirectBufferInputStream inputStream = new DirectBufferInputStream(state.buffer, 0, state.encodedLength);
-        final Simple.Foo2 foo = Simple.Foo2.parseFrom(inputStream);
-
-        assertEquals(Long.MIN_VALUE, foo.getBar());
-        assertEquals("EURUSD", foo.getBaz());
-        assertEquals(42.1, foo.getQux());
+        assertEquals(1L, data.getBestBid().getMantissa());
+        assertEquals(2L, data.getBestAsk().getMantissa());
+        assertEquals(4L, data.getLastTradedPrice().getMantissa());
+        assertEquals(8L, data.getTotalTradedVolume());
+        assertEquals(16L, data.getHigh().getMantissa());
+        assertEquals(32L, data.getLow().getMantissa());
+        assertEquals(40L, state.encodedLength); // message length
     }
 }

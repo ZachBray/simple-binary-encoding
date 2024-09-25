@@ -618,7 +618,7 @@ project(':sbe-benchmarks') {
         args = [
                 'src/main/resources/car.xml',
                 'src/main/resources/fix-message-samples.xml',
-                'src/main/resources/simple.xml'
+                'src/main/resources/top-of-book.xml'
         ]
     }
 
@@ -639,11 +639,9 @@ project(':sbe-benchmarks') {
 
     tasks.named('extractIncludeProto').configure {
         enabled false
-//        dependsOn 'compileGeneratedJava'
     }
 
     tasks.named('extractIncludeTestProto').configure {
-//        dependsOn 'compileGeneratedTestJava'
         enabled false
     }
 }

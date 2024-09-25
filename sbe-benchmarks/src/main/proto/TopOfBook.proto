@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package uk.co.real_logic.protobuf;
+
+message Decimal64 {
+  sint64 mantissa = 1; // could use sfixed64
+  sint32 exponent = 2; // no smaller scalar types
+}
+
+message TopOfBookData {
+  string symbol = 1;
+  Decimal64 bestBid = 2;
+  Decimal64 bestAsk = 3;
+  Decimal64 lastTradedPrice = 4;
+  uint64 totalTradedVolume = 5;
+  Decimal64 high = 6;
+  Decimal64 low = 7;
+}
