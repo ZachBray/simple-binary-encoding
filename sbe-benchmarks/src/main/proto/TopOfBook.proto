@@ -16,3 +16,18 @@ message TopOfBookData {
   Decimal64 high = 6;
   Decimal64 low = 7;
 }
+
+message FixedDecimal64 {
+  sfixed64 mantissa = 1; // could use sfixed64
+  sfixed32 exponent = 2; // no smaller scalar types
+}
+
+message FixedTopOfBookData {
+  string symbol = 1;
+  FixedDecimal64 bestBid = 2;
+  FixedDecimal64 bestAsk = 3;
+  FixedDecimal64 lastTradedPrice = 4;
+  fixed64 totalTradedVolume = 5;
+  FixedDecimal64 high = 6;
+  FixedDecimal64 low = 7;
+}

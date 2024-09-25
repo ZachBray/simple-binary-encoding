@@ -58,10 +58,10 @@ public class TopOfBookBenchmarkTest
     }
 
     @Test
-    void protobufBenchmarkShouldEncodeData() throws IOException
+    void variableLengthProtobufBenchmarkShouldEncodeData() throws IOException
     {
         final TopOfBookBenchmark.ProtobufState state = new TopOfBookBenchmark.ProtobufState();
-        new TopOfBookBenchmark().protobufEncode(state, blackhole);
+        new TopOfBookBenchmark().variableLengthProtobufEncode(state, blackhole);
         final DirectBufferInputStream inputStream = new DirectBufferInputStream(state.buffer, 0, state.encodedLength);
         final TopOfBook.TopOfBookData data = TopOfBook.TopOfBookData.parseFrom(inputStream);
 
@@ -72,5 +72,22 @@ public class TopOfBookBenchmarkTest
         assertEquals(16L, data.getHigh().getMantissa());
         assertEquals(32L, data.getLow().getMantissa());
         assertEquals(40L, state.encodedLength); // message length
+    }
+
+    @Test
+    void fixedLengthProtobufBenchmarkShouldEncodeData() throws IOException
+    {
+        final TopOfBookBenchmark.ProtobufState state = new TopOfBookBenchmark.ProtobufState();
+        new TopOfBookBenchmark().fixedLengthProtobufEncode(state, blackhole);
+        final DirectBufferInputStream inputStream = new DirectBufferInputStream(state.buffer, 0, state.encodedLength);
+        final TopOfBook.FixedTopOfBookData data = TopOfBook.FixedTopOfBookData.parseFrom(inputStream);
+
+        assertEquals(1L, data.getBestBid().getMantissa());
+        assertEquals(2L, data.getBestAsk().getMantissa());
+        assertEquals(4L, data.getLastTradedPrice().getMantissa());
+        assertEquals(8L, data.getTotalTradedVolume());
+        assertEquals(16L, data.getHigh().getMantissa());
+        assertEquals(32L, data.getLow().getMantissa());
+        assertEquals(97L, state.encodedLength); // message length
     }
 }

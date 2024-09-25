@@ -103,10 +103,30 @@ public class TopOfBookBenchmark
     }
 
     @Benchmark
-    public void protobufEncode(final ProtobufState state, final Blackhole blackhole) throws IOException
+    public void variableLengthProtobufEncode(final ProtobufState state, final Blackhole blackhole) throws IOException
     {
         state.outputStream.wrap(state.buffer, 0, state.buffer.capacity());
         final TopOfBook.TopOfBookData.Builder builder = TopOfBook.TopOfBookData.newBuilder();
+        builder.setSymbol("EURUSD");
+        builder.getBestBidBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
+        builder.getBestAskBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
+        builder.getLastTradedPriceBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
+        builder.setTotalTradedVolume(VALUES[state.nextIndex()]);
+        builder.getHighBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
+        builder.getLowBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
+        builder.build().writeTo(state.codedOutputStream);
+        state.encodedLength = state.codedOutputStream.getTotalBytesWritten();
+        state.codedOutputStream.flush();
+        // I think this is sufficient to prevent the compiler optimising away our code; however, it'd be good to have
+        // a review. I think in some places we use a checksum of the encoded data to prevent this.
+        blackhole.consume(state.buffer);
+    }
+
+    @Benchmark
+    public void fixedLengthProtobufEncode(final ProtobufState state, final Blackhole blackhole) throws IOException
+    {
+        state.outputStream.wrap(state.buffer, 0, state.buffer.capacity());
+        final TopOfBook.FixedTopOfBookData.Builder builder = TopOfBook.FixedTopOfBookData.newBuilder();
         builder.setSymbol("EURUSD");
         builder.getBestBidBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
         builder.getBestAskBuilder().setMantissa(VALUES[state.nextIndex()]).setExponent(42);
